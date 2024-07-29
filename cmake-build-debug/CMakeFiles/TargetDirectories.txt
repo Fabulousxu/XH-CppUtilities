@@ -1,3 +1,0 @@
-E:/GitHub/CppHelper/cmake-build-debug/CMakeFiles/CppHelper.dir
-E:/GitHub/CppHelper/cmake-build-debug/CMakeFiles/edit_cache.dir
-E:/GitHub/CppHelper/cmake-build-debug/CMakeFiles/rebuild_cache.dir
