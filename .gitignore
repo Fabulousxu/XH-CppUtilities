@@ -1,3 +1,9 @@
+.idea/
+.vscode/
+x86/
+x64/
+cmake-build-debug/
+
 # Prerequisites
 *.d
 
