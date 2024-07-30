@@ -1,7 +1,9 @@
 .idea/
 .vscode/
+.vs/
 x86/
 x64/
+out/
 cmake-build-debug/
 
 # Prerequisites
