@@ -1,8 +1,0 @@
-#ifndef CPPHELPER_THREADPOOL_H_
-#define CPPHELPER_THREADPOOL_H_
-
-class ThreadPool {
-
-};
-
-#endif //CPPHELPER_THREADPOOL_H_

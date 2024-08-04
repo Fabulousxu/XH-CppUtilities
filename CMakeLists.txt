@@ -4,5 +4,8 @@ project(CppHelper)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(CppHelper main.cpp
-        ThreadPool.cpp
-        ThreadPool.h)
+        Promise.h
+        function_traits.h
+        hCppHelper.h
+        hMemfunc.h
+        hPredicate.h)

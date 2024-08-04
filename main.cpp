@@ -1,6 +1,9 @@
 #include <iostream>
+#include "Promise.h"
 
 int main() {
-  std::cout << "" << std::endl;
+  Promise([](int x) { return x; })
+      .then([](int x) { std::cout << x; })
+          (1);
   return 0;
 }
