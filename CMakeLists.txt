@@ -8,4 +8,5 @@ add_executable(CppHelper main.cpp
         function_traits.h
         hCppHelper.h
         hMemfunc.h
-        hPredicate.h)
+        hPredicate.h
+        enum_name.h)

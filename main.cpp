@@ -1,9 +1,10 @@
 #include <iostream>
 #include "Promise.h"
+#include "enum_name.h"
 
 int main() {
-  Promise([](int x) { return x; })
-      .then([](int x) { std::cout << x; })
-          (1);
+  enum Color { RED = 0, GREEN = 1, BLUE = 2 };
+  Color c = (Color)0;
+  std::cout << enum_name(c) << std::endl;
   return 0;
 }
