@@ -5,6 +5,7 @@ x86/
 x64/
 out/
 cmake-build-debug/
+build/
 
 # Prerequisites
 *.d
