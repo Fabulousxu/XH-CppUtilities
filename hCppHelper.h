@@ -28,7 +28,7 @@
 */
 #include <iostream>
 #include <functional>
-#include "./hMemfunc.h"
+#include "./member_function.h"
 #include "./hPredicate.h"
 namespace hstd{
 /**
