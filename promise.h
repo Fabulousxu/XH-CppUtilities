@@ -14,7 +14,9 @@ class Promise<Ret(Args...)> {
  public:
   Promise(const std::function<Ret(Args...)> &f) noexcept: _fun(f) {}
   Promise(std::function<Ret(Args...)> &&f) noexcept: _fun(std::move(f)) {}
-  Ret operator()(Args &&...args) { return _fun(std::forward<Args>(args)...); }
+  Ret operator()(Args &&...args) const {
+    return _fun(std::forward<Args>(args)...);
+  }
   template<typename Func>
   Promise<std::invoke_result_t<Func, Ret>(Args...)> then(Func &&f) {
     return {[f, this](Args &&...args) {

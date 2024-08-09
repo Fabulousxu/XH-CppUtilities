@@ -5,6 +5,8 @@
 #include <array>
 #include <iostream>
 
+namespace xh {
+
 template<auto>
 constexpr auto enum_name() {
 #if __GNUC__ || __clang__
@@ -36,5 +38,7 @@ constexpr auto enum_name(T value) {
   }(std::make_index_sequence<num>{});
   return names[static_cast<size_t>(value)];
 }
+
+}; // namespace xh
 
 #endif //ENUM_NAME_H

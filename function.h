@@ -71,13 +71,13 @@ struct _function_traits_helper<Ret(Class::*)(Args...)>
 };
 
 template<typename T>
-struct function_traits
-    : _function_traits_helper<remove_mem_fun_cv_t<std::remove_cvref_t<T>>> {
+struct function_traits : _function_traits_helper<
+    remove_mem_fun_cv_t<std::remove_cvref_t<T>>> {
 };
 template<typename T>
-using function_traits_t = typename function_traits<T>::type;
+using function_traits_t = function_traits<T>::type;
 template<typename T>
-using function_return_t = typename function_traits<T>::return_type;
+using function_return_t = function_traits<T>::return_type;
 
 template<typename>
 class mem_fun;
@@ -85,6 +85,7 @@ class mem_fun;
 #define MEM_FUN(cv)                                              \
 template<typename Ret, typename Class, typename... Args>         \
 class mem_fun<Ret(Class::*)(Args...) cv> {                       \
+  Ret (Class::*_mem_fun)(Args...) cv;                            \
  public:                                                         \
   mem_fun(Ret (Class::*f)(Args...) cv) noexcept : _mem_fun(f) {} \
   Ret operator()(cv Class &obj, Args... args) const {            \
@@ -93,8 +94,6 @@ class mem_fun<Ret(Class::*)(Args...) cv> {                       \
   Ret operator()(cv Class *obj, Args... args) const {            \
     return (obj->*_mem_fun)(args...);                            \
   }                                                              \
- private:                                                        \
-  Ret (Class::*_mem_fun)(Args...) cv;                            \
 };
 
 MEM_FUN()
