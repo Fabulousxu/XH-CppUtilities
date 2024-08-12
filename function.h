@@ -65,6 +65,17 @@ template<typename Ret, typename... Args>
 struct _function_traits_helper<Ret(*)(Args...)>
     : _function_traits_helper<Ret(Args...)> {
 };
+
+template<typename Ret, typename... Args>
+struct _function_traits_helper<Ret(Args..., ...)> {
+  using type = Ret(Args..., ...);
+  using return_type = Ret;
+  using argument_types = std::tuple<Args...>;
+  template<unsigned index>
+  using argument_type = std::tuple_element_t<index, std::tuple<Args...>>;
+  inline static constexpr unsigned arity = sizeof...(Args);
+};
+
 template<typename Ret, typename Class, typename... Args>
 struct _function_traits_helper<Ret(Class::*)(Args...)>
     : _function_traits_helper<Ret(Args...)> {
@@ -72,7 +83,7 @@ struct _function_traits_helper<Ret(Class::*)(Args...)>
 
 template<typename T>
 struct function_traits : _function_traits_helper<
-    remove_mem_fun_cv_t<std::remove_cvref_t<T>>> {
+    remove_mem_fun_cv_t < std::remove_cvref_t<T>>> {
 };
 template<typename T>
 using function_traits_t = function_traits<T>::type;
