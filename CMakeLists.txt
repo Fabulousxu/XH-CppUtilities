@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(CppHelper main.cpp
         promise.h
-        function.h
+        function_traits.h
         cpp_helper.h
         predicate.h
         enum_name.h

@@ -1,8 +1,6 @@
 #include <cstdarg>
 #include <iostream>
-#include "enum_name.h"
-#include "function.h"
-#include "promise.h"
+#include "function_traits.h"
 
 using std::cout;
 using std::endl;
@@ -47,45 +45,45 @@ const volatile auto &fun_34 = fun_24;
 const volatile auto &&fun_35 = std::move(fun_24);
 
 struct A {
-  int fun(int) { return 0; }
+	int fun(int) { return 0; }
 };
 
 int main() {
-  cout << is_same_v<callable_traits_t<decltype(fun_0)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_1)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_2)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_3)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_4)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_5)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_6)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_7)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_8)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_9)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_10)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_11)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_12)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_13)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_14)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_15)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_16)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_17)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_18)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_19)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_20)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_21)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_22)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_23)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_24)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_25)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_26)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_27)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_28)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_29)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_30)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_31)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_32)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_33)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_34)>, int(int)> << endl;
-  cout << is_same_v<callable_traits_t<decltype(fun_35)>, int(int)> << endl;
-  return 0;
+	cout << is_same_v<callable_traits_t<decltype(fun_0)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_1)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_2)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_3)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_4)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_5)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_6)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_7)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_8)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_9)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_10)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_11)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_12)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_13)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_14)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_15)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_16)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_17)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_18)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_19)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_20)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_21)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_22)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_23)>, int(int)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_24)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_25)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_26)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_27)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_28)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_29)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_30)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_31)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_32)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_33)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_34)>, int(int...)> << endl;
+	cout << is_same_v<callable_traits_t<decltype(fun_35)>, int(int...)> << endl;
+	return 0;
 }
