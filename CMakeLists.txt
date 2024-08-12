@@ -9,4 +9,5 @@ add_executable(CppHelper main.cpp
         cpp_helper.h
         predicate.h
         enum_name.h
+        function_test.h
 )

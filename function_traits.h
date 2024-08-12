@@ -68,13 +68,40 @@ inline constexpr bool is_callable_v
 // member function traits
 
 template<typename _T>
+struct remove_member_function_reference {};
+
+template<typename _T>
+using remove_member_function_reference_t
+	= remove_member_function_reference<_T>::type;
+
+template<typename _T>
 struct remove_member_function_const {};
+
+template<typename _T>
+using remove_member_function_const_t
+	= remove_member_function_const<_T>::type;
 
 template<typename _T>
 struct remove_member_function_volatile {};
 
 template<typename _T>
+using remove_member_function_volatile_t
+	= remove_member_function_volatile<_T>::type;
+
+template<typename _T>
 struct remove_member_function_cv {};
+
+template<typename _T>
+using remove_member_function_cv_t
+	= remove_member_function_cv<_T>::type;
+
+template<typename _T>
+struct remove_member_function_cvref
+	: remove_member_function_cv<remove_member_function_reference_t<_T>> {};
+
+template<typename _T>
+using remove_member_function_cvref_t
+	= remove_member_function_cvref<_T>::type;
 
 #define REMOVE_MEMBER_FUNCTION_QUALIFIERS(remove, qualifiers, result)          \
 template<typename _Ret, typename _Cls, typename... _Args>                      \
@@ -85,32 +112,56 @@ template<typename _Ret, typename _Cls, typename... _Args>                      \
 struct remove_member_function_##remove<_Ret(_Cls::*)(_Args..., ...)qualifiers> \
 	{ using type = _Ret(_Cls::*)(_Args..., ...) result; };
 
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, ,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, &,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, &&,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const, const)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const &, const)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const &&, const)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, volatile, volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, volatile &, volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, volatile &&, volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const volatile, const volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const volatile &, const volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const volatile &&, const volatile)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, ,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, &, &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, &&, &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const &, const &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const &&, const &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, volatile, volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, volatile &, volatile &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, volatile &&, volatile &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const volatile, volatile)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const volatile &, const volatile &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const volatile &&, const volatile &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, ,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, &, &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, &&, &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const, const)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const &, const &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const &&, const &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, volatile,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, volatile &, volatile &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, volatile &&, volatile &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const volatile, const)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const volatile &, const &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const volatile &&, const &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, ,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, &, &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, &&, &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const &, const &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const &&, const &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, volatile,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, volatile &, volatile &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, volatile &&, volatile &&)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const volatile,)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const volatile &, const volatile &)
+REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const volatile &&, const volatile &&)
 
 #undef REMOVE_MEMBER_FUNCTION_QUALIFIERS
-
-template<typename _T>
-using remove_member_function_const_t
-	= remove_member_function_const<_T>::type;
-
-template<typename _T>
-using remove_member_function_volatile_t
-	= remove_member_function_volatile<_T>::type;
-
-template<typename _T>
-using remove_member_function_cv_t
-	= remove_member_function_cv<_T>::type;
 
 
 template<typename _T>
@@ -122,7 +173,7 @@ struct _remove_member_function_class_helper<_T(_C::*)>
 
 template<typename _T>
 struct remove_member_function_class
-	: _remove_member_function_class_helper<remove_member_function_cv_t<_T>> {};
+	: _remove_member_function_class_helper<remove_member_function_cvref_t<_T>> {};
 
 template<typename _T>
 using remove_member_function_class_t
