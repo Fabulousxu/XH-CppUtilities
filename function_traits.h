@@ -240,6 +240,29 @@ inline constexpr unsigned callable_arity_v
 
 // function traits
 
+template<typename _T>
+struct function_traits
+	: callable_traits<_T> {};
+
+template<typename _T>
+using function_traits_t
+	= function_traits<_T>::type;
+
+template<typename _T>
+using function_return_t
+	= function_traits<_T>::return_type;
+
+template<typename _T>
+using function_argument_tuple
+	= function_traits<_T>::argument_tuple;
+
+template<typename _T, unsigned _Idx>
+using function_argument_t
+	= function_traits<_T>::template argument_type<_Idx>;
+
+template<typename _T>
+inline constexpr unsigned function_arity_v
+	= function_traits<_T>::arity;
 
 
 // member function
