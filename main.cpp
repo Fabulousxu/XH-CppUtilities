@@ -49,11 +49,30 @@ struct A {
 
 };
 
-int main() {
-  A a;
-  a.count = 2;
-  std::cout << a.getCntLessThanK << std::endl;
-//  a.setCntMoreThanK = 3;
-  std::cout << a.getCntLessThanK << std::endl;
+//============================main==========================
+
+template<class T, class V=void>
+struct is_callable:std::bool_constant<false>{};
+template<class Func>
+struct is_callable<Func, decltype(void(Func::operator()))>:std::bool_constant<true>{};
+template<class Ret, class ...Args>
+struct is_callable<Ret(Args...), void>:std::bool_constant<true>{};
+template<class Ret, class ...Args>
+struct is_callable<Ret(*)(Args...), void>:std::bool_constant<true>{};
+template<class Ret, class ...Args>
+struct is_callable<Ret(Args...,...), void>:std::bool_constant<true>{};
+template<class Ret, class ...Args>
+struct is_callable<Ret(*)(Args...,...), void>:std::bool_constant<true>{};
+
+
+template<class T>
+inline constexpr bool is_callable_v = is_callable<T>::value;
+
+template<class T>
+concept Callable = is_callable_v<T>;
+
+int main(){
+  const auto b = is_callable_v<int(int...)>;
+  printf(b?"1":"0");  
   return 0;
 }

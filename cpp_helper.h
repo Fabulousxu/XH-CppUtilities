@@ -4,7 +4,6 @@
 #include <iostream>
 #include <functional>
 #include "function.h"
-#include "./hPredicate.h"
 
 namespace xh {
 
