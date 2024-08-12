@@ -1,5 +1,5 @@
-#ifndef ENUM_NAME_H
-#define ENUM_NAME_H
+#ifndef XH_ENUM_NAME_H
+#define XH_ENUM_NAME_H
 
 #include <string_view>
 #include <array>
@@ -41,4 +41,4 @@ constexpr auto enum_name(T value) {
 
 }; // namespace xh
 
-#endif //ENUM_NAME_H
+#endif //XH_ENUM_NAME_H
