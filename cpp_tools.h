@@ -1,5 +1,5 @@
-#ifndef HZWXLIB_HSTD_HCPPHELPER_H
-#define HZWXLIB_HSTD_HCPPHELPER_H
+#ifndef _XH_CPP_TOOLS_H_
+#define _XH_CPP_TOOLS_H_
 
 #include <iostream>
 #include <functional>
@@ -81,4 +81,4 @@ H_INTERFACE(TComparable)
 };
 
 }
-#endif
+#endif //_XH_CPP_TOOLS_H_

@@ -1,31 +1,29 @@
 #ifndef XH_PREDICATE_H
 #define XH_PREDICATE_H
-#include <tuple>
-#include "./function_traits.h"
-#include <functional>
+
+#include "function_traits.h"
+
 namespace xh {
-template<class F>
-inline auto stdFunc(F func) { return std::function<function_traits_t<F>>(func); }
 
 /**
  * @brief 谓词(C++20管道运算符)
- * @tparam Func 原函数的类型
- * @tparam Args 函数除第一个参数以外的剩余参数类型
+ * @tparam _F 原函数的类型
+ * @tparam _Args 函数除第一个参数以外的剩余参数类型
 */
-template<class Func, class ...Args>
+template<typename _F, typename... _Args>
 class predicate_no_call {
  private:
-	Func __func;
-	std::tuple<Args...> __args;
+	_F _func;
+	std::tuple<_Args...> _args;
  public:
-	using subject_type = typename function_traits<Func>::template argument_type<0>;
+	using subject_type = function_argument_t<_F, 0>;
 	/**
 	 * @brief 构造函数
 	 * @param func 函数原型
 	 * @param args 函数除第一个参数(主语)以外的剩余参数
 	 */
-	predicate_no_call(Func func, std::tuple<Args...> &&args)
-		: __func(func), __args(std::move(args)) {}
+	predicate_no_call(_F func, std::tuple<_Args...> &&args)
+		: _func(func), _args(std::move(args)) {}
 	predicate_no_call(const predicate_no_call &) = delete;
 	predicate_no_call(predicate_no_call &&) = default;
 	predicate_no_call &operator=(const predicate_no_call &) = delete;
@@ -36,12 +34,12 @@ class predicate_no_call {
 	 * @param pred 谓语，也就是predicate_no_call对象
 	 * @return 返回正常函数返回值；即把filter(array,isInt)变成array | filter(isInt)的形式
 	*/
-	friend function_return_t<Func> operator|(
+	friend function_return_t<_F> operator|(
 		subject_type subject,
-		const predicate_no_call<Func, Args...> &pred
+		const predicate_no_call<_F, _Args...> &pred
 	) {
-		auto args = std::tuple_cat(std::make_tuple(subject), pred.__args);
-		return std::apply(pred.__func, args);
+		auto args = std::tuple_cat(std::make_tuple(subject), pred._args);
+		return std::apply(pred._func, args);
 	}
 };
 template<class Func, class ...Args>

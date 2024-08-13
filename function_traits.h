@@ -1,8 +1,9 @@
 #ifndef _XH_FUNCTION_TRAITS_H_
 #define _XH_FUNCTION_TRAITS_H_
 
-#include <tuple>
 #include <type_traits>
+#include <functional>
+#include <tuple>
 
 namespace xh {
 using
@@ -14,6 +15,7 @@ using
 	std::remove_pointer_t,
 	std::tuple,
 	std::tuple_element_t,
+	std::function,
 	std::is_member_function_pointer_v,
 	std::is_function_v;
 
@@ -67,35 +69,35 @@ inline constexpr bool is_callable_v
 
 // member function traits
 
-template<typename _T>
+template<typename _T> requires is_member_function_pointer_v<_T>
 struct remove_member_function_reference {};
 
 template<typename _T>
 using remove_member_function_reference_t
 	= remove_member_function_reference<_T>::type;
 
-template<typename _T>
+template<typename _T> requires is_member_function_pointer_v<_T>
 struct remove_member_function_const {};
 
 template<typename _T>
 using remove_member_function_const_t
 	= remove_member_function_const<_T>::type;
 
-template<typename _T>
+template<typename _T> requires is_member_function_pointer_v<_T>
 struct remove_member_function_volatile {};
 
 template<typename _T>
 using remove_member_function_volatile_t
 	= remove_member_function_volatile<_T>::type;
 
-template<typename _T>
+template<typename _T> requires is_member_function_pointer_v<_T>
 struct remove_member_function_cv {};
 
 template<typename _T>
 using remove_member_function_cv_t
 	= remove_member_function_cv<_T>::type;
 
-template<typename _T>
+template<typename _T> requires is_member_function_pointer_v<_T>
 struct remove_member_function_cvref
 	: remove_member_function_cv<remove_member_function_reference_t<_T>> {};
 
@@ -171,7 +173,7 @@ template<typename _T, typename _C>
 struct _remove_member_function_class_helper<_T(_C::*)>
   { using type = _T; };
 
-template<typename _T>
+template<typename _T> requires is_member_function_pointer_v<_T>
 struct remove_member_function_class
 	: _remove_member_function_class_helper<remove_member_function_cvref_t<_T>> {};
 
@@ -189,6 +191,7 @@ template<typename _Ret, typename... _Args>
 struct _callable_traits_base<_Ret(_Args...)> {
   using type = _Ret(_Args...);
   using return_type = _Ret;
+	using std_type = function<type>;
 	using argument_tuple = tuple<_Args...>;
 	template<unsigned _Idx>
 	using argument_type = tuple_element_t<_Idx, argument_tuple>;
@@ -213,7 +216,7 @@ struct _callable_traits_helper<_T, false>
 	: _callable_traits_base<
 			remove_member_function_class_t<decltype(&_T::operator())>> {};
 
-template<typename _T>
+template<typename _T> requires is_callable_v<_T>
 struct callable_traits
 	: _callable_traits_helper<remove_cvref_t<_T>> {};
 
@@ -224,6 +227,10 @@ using callable_traits_t
 template<typename _T>
 using callable_return_t
 	= callable_traits<_T>::return_type;
+
+template<typename _T>
+using callable_std_t
+	= callable_traits<_T>::std_type;
 
 template<typename _T>
 using callable_argument_tuple
@@ -251,6 +258,14 @@ using function_traits_t
 template<typename _T>
 using function_return_t
 	= function_traits<_T>::return_type;
+
+template<typename _T>
+using function_std_t
+	= function_traits<_T>::std_type;
+
+template<typename _T>
+using function_argument_tuple
+	= function_traits<_T>::argument_tuple;
 
 template<typename _T>
 using function_argument_tuple

@@ -1,4 +1,5 @@
-# CppHelper
+# XH-CppTools
+
 ## callable_traits
 How can we get the return type and arguments' type **DIRECTLY** from a function-like type? Use our *callable_traits*!
 ```C++
@@ -17,7 +18,7 @@ int main(){
     return 0;
 }
 ```
-To get arguments' type, you can use *callable_argument_tuple\<Func\>*. For one exact argument's type, use *callable_argument_type<Func\,0>*.
+To get arguments' type, you can use *callable_argument_tuple\<_F\>*. For one exact argument's type, use *callable_argument_type<_F\,0>*.
 
 Lambda or any callable function-like things are all accepted. But notice that member function (aka method) is not accepted. 
 
