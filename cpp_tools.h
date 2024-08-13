@@ -6,6 +6,50 @@
 #include "function_traits.h"
 
 namespace xh {
+using
+	std::size_t,
+	std::string_view,
+	std::array,
+	std::make_index_sequence,
+	std::is_enum_v;
+
+
+// enum name
+
+template<auto>
+constexpr auto enum_name() {
+#if __GNUC__ || __clang__
+	string_view name = __PRETTY_FUNCTION__;
+	size_t start = name.find('=') + 2, end = name.size() - 1;
+#elif _MSC_VER
+	string_view name = __FUNCSIG__;
+	size_t start = name.find('<') + 1, end = name.rfind('>');
+#endif
+	name = string_view{name.data() + start, end - start};
+	if ((start = name.rfind("::")) != string_view::npos)
+		name = string_view{name.data() + start + 2, name.size() - start - 2};
+	return name.find(')') == string_view::npos ? name : "";
+}
+
+template<typename _T, size_t _N = 0>
+constexpr auto enum_max() {
+	if constexpr (!enum_name<static_cast<_T>(_N)>().empty())
+		return enum_max<_T, _N + 1>();
+	return _N;
+}
+
+template<typename _T> requires is_enum_v<_T>
+constexpr auto enum_name(_T value) {
+	constexpr auto num = enum_max<_T>();
+	constexpr auto names = []<size_t... _I>(std::index_sequence<_I...>) {
+		return std::array<std::string_view, num>{
+			enum_name<static_cast<_T>(_I)>()...};
+	}(std::make_index_sequence<num>{});
+	return names[static_cast<size_t>(value)];
+}
+
+
+// cpp tools
 
 #define USE_STD_IO using std::cin, std::cout, std::cerr, std::endl;
 

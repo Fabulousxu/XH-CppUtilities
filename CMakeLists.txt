@@ -8,6 +8,5 @@ add_executable(XH-CppTools main.cpp
         function_traits.h
         cpp_tools.h
         predicate.h
-        enum_name.h
         function_test.h
 )

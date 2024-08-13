@@ -1,48 +1,84 @@
 # XH-CppTools
 
-## callable_traits
-How can we get the return type and arguments' type **DIRECTLY** from a function-like type? Use our *callable_traits*!
+## xh::function_traits
+
 ```C++
 #include "function_traits.h"
-#include <iostream>
-int func1(int){return 0;}
-int main(){
-    const auto v1 = std::is_same_v<
-        xh::callable_traits_t<decltype(&func1)>, 
-        int(int)>;
-    const auto v2 = std::is_same_v<
-        xh::callable_return_t<decltype(&func1)>,
-        int
-    >;
-    printf("%d,%d,%d\n", v1,v2,v3); //1,1,1
-    return 0;
-}
+
+template<class _T>
+struct function_traits;
 ```
-To get arguments' type, you can use *callable_argument_tuple\<_F\>*. For one exact argument's type, use *callable_argument_type<_F\,0>*.
 
-Lambda or any callable function-like things are all accepted. But notice that member function (aka method) is not accepted. 
+函数类型萃取，用于获取可调用类型的返回以及参数等类型 
 
-## enum_name
-This function can help you get the name of one enumarate value as string_view.
+成员类型： 
+
+| 类型 | 说明 |
+| :---: | :---: |
+| type | 可调用类型去除引用限定以及cv限定后的类型 |
+| return_type | 返回值类型 |
+| std_type | 相对应的std::function |
+| argument_tuple | 参数包的std::tuple |
+| template\<size_t _N> argument_type | 第N个参数类型 |
+| arity | 参数个数 |
+
+其中，对不定参数函数进行函数类型萃取时，仅包含成员类型type和return_type 
+可调用类型包括函数类型、函数指针类型、仿函数类型、匿名函数类型，以及上述所有类型的cv限定与引用类型，可以使用**xh:is_callable**判断是否为可调用类型。 
+
+示例代码：
+
 ```C++
-#include "enum_name.h"
-#include <iostream>
-enum Color{
-    RED=0,
-    BLUE=1,
-    GREEN=2
-};
-int main(){
-    Color c = RED;
-    std::cout<<xh::enum_name(c)<<std::endl; 
-    //output "RED"
-    return 0;
+#include "function_traits.h"
+
+void fun(int) {}
+
+int main() {
+  static_assert(std::is_same_v<function_traits<decltype(&fun)>::type, void(int)>);
+  static_assert(std::is_same_v<function_traits<decltype(&fun)>::return_type, void>)
 }
 ```
-## predicate
+
+
+## get, set, getset
+
+```C++
+#include "function_tools.h"
+
+#define get(name, return_type, ...)
+#define set(name, argument_type, argument_name, ...)
+#define getset(name, return_type, get, argument_type, argument_name, set)
+```
+通过get、set、getset三个宏，可以定义getter和setter属性。 
+
+示例代码： 
+```C++
+#include <cassert>
+#include "function_tools.h"
+
+struct A {
+  int a;
+  get(getA, int, { return a; })
+  set(setA, int, val, { a = val; })
+  getset(getsetA, int, ({ return a; }), int, val, ({ a = val; }))
+};
+
+int main() {
+  A a;
+  a.setA = 1
+  assert(a.getA == 1);
+  a.getsetA = 2;
+  assert(a.getsetA == 2);
+  return 0;
+}
+```
+
+
+## xh::predicate
+
 Something like C++20 pipe operator. Through our *predicate*, you can convert any function-like things into "pipe-operatable".
 
 U can also take this as "dynamic add (public) method to a class". Just can't visit private or protected things.
+
 ```C++
 #include "predicate.h"
 #include <vector>
@@ -72,8 +108,11 @@ int main(){
     v|print2();
 }
 ```
+
 ## ADD_METHOD
+
 This is another way we tried to add method to class dynamically. 
+
 ```C++
 #include "test_add_method.h"
 #include <iostream>
@@ -91,25 +130,5 @@ int main(){
     std::cout<<(obj.*ptr)(1);
 }
 ```
+
 Still, we can't visit private and protected things.
-## getter and setter
-Like the getter and setter of JavaScript, we found a way to register getter and setter in C++.
-```C++
-#include "cpp_helper.h"
-#include <iostream>
-USE_STD_IO
-class T{
-    int a;
-public:
-    T(int a_=10):a(a_){}
-    get(half_a, double){return a/2.0;}
-    set(half_a, double){this->a = 2*arg;}
-};
-int main(){
-    T obj(100);
-    obj.halfa = 55.5;
-    cout<<obj.halfa; //output 111
-    return 0; 
-}
-```
-## promise

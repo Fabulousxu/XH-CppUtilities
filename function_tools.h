@@ -73,11 +73,10 @@ const setter<argument_type> name                     \
 
 #define REMOVE_PARENTHESES(...) __VA_ARGS__
 
-#define getset(name, return_type, getset_get,             \
-	argument_type, argument_name, getset_set)               \
-const getter_setter<return_type, argument_type> name      \
-  = { [&]() -> return_type REMOVE_PARENTHESES getset_get, \
-  		[&](argument_type argument_name) -> void REMOVE_PARENTHESES getset_set };
+#define getset(name, return_type, get, argument_type, argument_name, set) \
+const getter_setter<return_type, argument_type> name                      \
+  = { [&]() -> return_type REMOVE_PARENTHESES get,                        \
+  		[&](argument_type argument_name) -> void REMOVE_PARENTHESES set };
 
 
 // to std function

@@ -7,6 +7,7 @@
 
 namespace xh {
 using
+	std::size_t,
 	std::bool_constant,
 	std::false_type,
 	std::true_type,
@@ -193,9 +194,9 @@ struct _callable_traits_base<_Ret(_Args...)> {
   using return_type = _Ret;
 	using std_type = function<type>;
 	using argument_tuple = tuple<_Args...>;
-	template<unsigned _Idx>
+	template<size_t _Idx>
 	using argument_type = tuple_element_t<_Idx, argument_tuple>;
-	inline static constexpr unsigned arity = sizeof...(_Args);
+	inline static constexpr size_t arity = sizeof...(_Args);
 };
 
 template<typename _Ret, typename... _Args>
@@ -236,12 +237,12 @@ template<typename _T>
 using callable_argument_tuple
 	= callable_traits<_T>::argument_tuple;
 
-template<typename _T, unsigned _Idx>
+template<typename _T, size_t _Idx>
 using callable_argument_t
 	= callable_traits<_T>::template argument_type<_Idx>;
 
 template<typename _T>
-inline constexpr unsigned callable_arity_v
+inline constexpr size_t callable_arity_v
 	= callable_traits<_T>::arity;
 
 
@@ -271,12 +272,12 @@ template<typename _T>
 using function_argument_tuple
 	= function_traits<_T>::argument_tuple;
 
-template<typename _T, unsigned _Idx>
+template<typename _T, size_t _Idx>
 using function_argument_t
 	= function_traits<_T>::template argument_type<_Idx>;
 
 template<typename _T>
-inline constexpr unsigned function_arity_v
+inline constexpr size_t function_arity_v
 	= function_traits<_T>::arity;
 
 };  // namespace xh
