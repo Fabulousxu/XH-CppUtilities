@@ -39,16 +39,21 @@ int main() {
 ```
 
 
-## get, set, getset
+## xh::get, xh::set, xh::getset
 
 ```C++
 #include "function_tools.h"
 
-#define get(name, return_type, ...)
-#define set(name, argument_type, argument_name, ...)
-#define getset(name, return_type, get, argument_type, argument_name, set)
+template<class Ret>
+class get;
+
+template<class Arg>
+class set;
+
+template<class Ret, class Arg>
+class getset;
 ```
-通过get、set、getset三个宏，可以定义getter和setter属性。 
+可以定义getter和setter属性。分别重载了类型转换与赋值运算符。其中get和set传入一个可调用对象构造，getset传入两个可调用对象构造。 
 
 示例代码： 
 ```C++
@@ -57,14 +62,17 @@ int main() {
 
 struct A {
   int a;
-  get(getA, int, { return a; })
-  set(setA, int, val, { a = val; })
-  getset(getsetA, int, ({ return a; }), int, val, ({ a = val; }))
+  const get<int> getA = [this] { return a; };
+  const set<int> setA = [this](int val) { a = val; };
+  const getset<int, int> getsetA = {
+    [this] { return a; },
+    [this](int val) { a = val; }
+  };
 };
 
 int main() {
   A a;
-  a.setA = 1
+  a.setA = 1;
   assert(a.getA == 1);
   a.getsetA = 2;
   assert(a.getsetA == 2);

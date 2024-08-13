@@ -8,7 +8,8 @@ namespace xh {
 using
 	std::function,
 	std::invoke_result_t,
-	std::forward;
+	std::forward,
+	std::is_same_v;
 
 // auto return
 
@@ -20,70 +21,62 @@ struct _auto_return_helper {
 #define auto_return return _auto_return_helper{};
 
 
-// getter and setter
-
-template<typename _Ret>
-class getter {
-	function<_Ret()> _getter;
- public:
-	template<typename _F>
-	getter(_F &&f) noexcept : _getter(f) {}
-	getter(const getter &) = delete;
-	getter(getter &&) = delete;
-	getter &operator=(const getter &) = delete;
-	getter &operator=(getter &&) = delete;
-	operator _Ret() const { return _getter(); }
-};
-
-template<typename _Arg>
-class setter {
-	function<void(_Arg)> _setter;
- public:
-	template<typename _F>
-	setter(_F &&f) noexcept : _setter(f) {}
-	setter(const setter &) = delete;
-	setter(setter &&) = delete;
-	setter &operator=(const setter &) = delete;
-	setter &operator=(setter &&) = delete;
-	void operator=(_Arg arg) const { _setter(arg); }
-};
-
-template<typename _Ret, typename _Arg>
-class getter_setter {
-	function<_Ret()> _getter;
-	function<void(_Arg)> _setter;
- public:
-	template<typename _F1, typename _F2>
-	getter_setter(_F1 &&f1, _F2 &&f2) noexcept : _getter(f1), _setter(f2) {}
-	getter_setter(const getter_setter &) = delete;
-	getter_setter(getter_setter &&) = delete;
-	getter_setter &operator=(const getter_setter &) = delete;
-	getter_setter &operator=(getter_setter &&) = delete;
-	operator _Ret() const { return _getter(); }
-	void operator=(_Arg arg) const { _setter(arg); }
-};
-
-#define get(name, return_type, ...) \
-const getter<return_type> name      \
-  = [&]() -> return_type __VA_ARGS__ ;
-
-#define set(name, argument_type, argument_name, ...) \
-const setter<argument_type> name                     \
-  = [&](argument_type argument_name) -> void __VA_ARGS__ ;
-
-#define REMOVE_PARENTHESES(...) __VA_ARGS__
-
-#define getset(name, return_type, get, argument_type, argument_name, set) \
-const getter_setter<return_type, argument_type> name                      \
-  = { [&]() -> return_type REMOVE_PARENTHESES get,                        \
-  		[&](argument_type argument_name) -> void REMOVE_PARENTHESES set };
-
-
 // to std function
 
 template<typename _T> requires is_callable_v<_T>
 inline auto std_function(_T &&func)
 { return function_std_t<_T>(forward<_T>(func)); }
+
+
+// getter and set
+
+template<typename _Ret>
+class get {
+	function<_Ret()> _get;
+ public:
+	template<typename _T> requires (function_arity_v<_T> == 0)
+	get(_T &&f) noexcept : _get(f) {}
+	get &operator=(const get &) = delete;
+	get &operator=(get &&) = delete;
+	operator _Ret() const { return _get(); }
+};
+
+template<typename _T>
+get(_T) -> get<function_return_t<_T>>;
+
+
+template<typename _Arg>
+class set {
+	function<void(_Arg)> _set;
+ public:
+	template<typename _T> requires (function_arity_v<_T> == 1
+	  && is_same_v<function_return_t<_T>, void>)
+	set(_T &&f) noexcept : _set(f) {}
+	set &operator=(const set &) = delete;
+	set &operator=(set &&) = delete;
+	void operator=(_Arg arg) const { _set(arg); }
+};
+
+template<typename _T>
+set(_T) -> set<function_argument_t<_T, 0>>;
+
+
+template<typename _Ret, typename _Arg>
+class getset {
+	function<_Ret()> _get;
+	function<void(_Arg)> _set;
+ public:
+	template<typename _T1, typename _T2> requires (function_arity_v<_T1> == 0
+	  && function_arity_v<_T2> == 1 && is_same_v<function_return_t<_T2>, void>)
+	getset(_T1 &&f1, _T2 &&f2) noexcept : _get(f1), _set(f2) {}
+	getset &operator=(const getset &) = delete;
+	getset &operator=(getset &&) = delete;
+	operator _Ret() const { return _get(); }
+	void operator=(_Arg arg) const { _set(arg); }
+};
+
+template<typename _T1, typename _T2>
+getset(_T1, _T2) -> getset<function_return_t<_T1>, function_argument_t<_T2, 0>>;
 
 
 // member function

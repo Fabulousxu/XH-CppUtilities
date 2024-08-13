@@ -106,14 +106,13 @@ template<typename _T>
 using remove_member_function_cvref_t
 	= remove_member_function_cvref<_T>::type;
 
-#define REMOVE_MEMBER_FUNCTION_QUALIFIERS(remove, qualifiers, result)          \
-template<typename _Ret, typename _Cls, typename... _Args>                      \
-struct remove_member_function_##remove<_Ret(_Cls::*)(_Args...)qualifiers>      \
-	{ using type = _Ret(_Cls::*)(_Args...) result; };                            \
-                                                                               \
-template<typename _Ret, typename _Cls, typename... _Args>                      \
-struct remove_member_function_##remove<_Ret(_Cls::*)(_Args..., ...)qualifiers> \
-	{ using type = _Ret(_Cls::*)(_Args..., ...) result; };
+#define REMOVE_MEMBER_FUNCTION_QUALIFIERS(remove, qualifiers, result)         \
+template<typename _Ret, typename _C, typename... _Args>                       \
+struct remove_member_function_##remove<_Ret(_C::*)(_Args...) qualifiers>      \
+	{ using type = _Ret(_C::*)(_Args...) result; };                             \
+template<typename _Ret, typename _C, typename... _Args>                       \
+struct remove_member_function_##remove<_Ret(_C::*)(_Args..., ...) qualifiers> \
+	{ using type = _Ret(_C::*)(_Args..., ...) result; };
 
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, ,)
 REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, &,)
