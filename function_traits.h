@@ -264,35 +264,6 @@ template<typename _T>
 inline constexpr unsigned function_arity_v
 	= function_traits<_T>::arity;
 
-
-// member function
-
-template<typename>
-class member_function;
-
-#define MEMBER_FUNCTION_QUALIFIERS(qualifiers)                  \
-template <typename _Ret, typename _Cls, typename... _Args>      \
-class member_function<_Ret(_Cls::*)(_Args...)qualifiers> {      \
-  _Ret(_Cls::*_member_function)(_Args...)qualifiers;            \
- public:                                                        \
-  member_function(_Ret(_Cls::* f)(_Args...)qualifiers) noexcept \
-		: _member_function(f) {}                                    \
-	_Ret operator()(qualifiers _Cls &obj, _Args... args) const    \
-	{ return (obj.*_member_function)(args...); }                  \
-  _Ret operator()(qualifiers _Cls *obj, _Args... args) const    \
-	{ return (obj->*_member_function)(args...); }                 \
-};
-
-MEMBER_FUNCTION_QUALIFIERS()
-MEMBER_FUNCTION_QUALIFIERS(const)
-MEMBER_FUNCTION_QUALIFIERS(volatile)
-MEMBER_FUNCTION_QUALIFIERS(const volatile)
-
-#undef MEMBER_FUNCTION_QUALIFIERS
-
-template<typename T>
-member_function(T) -> member_function<std::remove_cvref_t<T>>;
-
 };  // namespace xh
 
 #endif  //_XH_FUNCTION_TRAITS_H_

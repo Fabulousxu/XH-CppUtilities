@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.28)
-project(CppHelper)
+project(XH-CppTools)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(CppHelper main.cpp
-        promise.h
+add_executable(XH-CppTools main.cpp
+        function_tools.h
         function_traits.h
-        cpp_helper.h
+        cpp_tools.h
         predicate.h
         enum_name.h
         function_test.h

@@ -6,51 +6,8 @@
 #include "function_traits.h"
 
 namespace xh {
-using std::function;
 
 #define USE_STD_IO using std::cin, std::cout, std::cerr, std::endl;
-
-struct _auto_return_helper {
-	template<class T>
-	operator T() const { return T{}; }
-};
-#define auto_return return _auto_return_helper{};
-
-
-// getter and setter
-
-template<typename _Ret>
-class getter {
-	function<_Ret()> _getter;
- public:
-	template<typename _F>
-	getter(_F &&f) : _getter(std::forward<_F>(f)) {}
-	getter(const getter &) = delete;
-	getter(getter &&) = delete;
-	getter &operator=(const getter &) = delete;
-	getter &operator=(getter &&) = delete;
-	operator _Ret() const { return _getter(); }
-};
-
-template<typename _Arg>
-class setter {
-	function<void(_Arg)> _setter;
- public:
-	template<typename _F>
-	setter(_F &&f) : _setter(std::forward<_F>(f)) {}
-	setter(const setter &) = delete;
-	setter(setter &&) = delete;
-	setter &operator=(const setter &) = delete;
-	setter &operator=(setter &&) = delete;
-	void operator=(_Arg arg) { _setter(arg); }
-};
-
-#define get(name, return_type) \
-const getter<return_type> name = [&]()
-
-#define set(name, argument_type, argument_name) \
-setter<argument_type> name = [&](argument_type argument_name)
-
 
 /**
  * @brief 接口宏，继承接口时须把子类名称填入模板参数中\
