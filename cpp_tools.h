@@ -2,16 +2,13 @@
 #define _XH_CPP_TOOLS_H_
 
 #include <iostream>
-#include <functional>
 #include "function_traits.h"
 
+using namespace std;
+
 namespace xh {
-using
-	std::size_t,
-	std::string_view,
-	std::array,
-	std::make_index_sequence,
-	std::is_enum_v;
+
+
 
 
 // enum name
@@ -31,19 +28,19 @@ constexpr auto enum_name() {
 	return name.find(')') == string_view::npos ? name : "";
 }
 
-template<typename _T, size_t _N = 0>
+template<typename T, size_t N = 0>
 constexpr auto enum_max() {
-	if constexpr (!enum_name<static_cast<_T>(_N)>().empty())
-		return enum_max<_T, _N + 1>();
-	return _N;
+	if constexpr (!enum_name<static_cast<T>(N)>().empty())
+		return enum_max<T, N + 1>();
+	return N;
 }
 
-template<typename _T> requires is_enum_v<_T>
-constexpr auto enum_name(_T value) {
-	constexpr auto num = enum_max<_T>();
-	constexpr auto names = []<size_t... _I>(std::index_sequence<_I...>) {
+template<typename T> requires is_enum_v<T>
+constexpr auto enum_name(T value) {
+	constexpr auto num = enum_max<T>();
+	constexpr auto names = []<size_t... N>(std::index_sequence<N...>) {
 		return std::array<std::string_view, num>{
-			enum_name<static_cast<_T>(_I)>()...};
+			enum_name<static_cast<T>(N)>()...};
 	}(std::make_index_sequence<num>{});
 	return names[static_cast<size_t>(value)];
 }

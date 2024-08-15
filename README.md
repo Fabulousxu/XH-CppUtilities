@@ -39,7 +39,7 @@ int main() {
 ```
 
 
-## xh::get, xh::set, xh::getset
+## xh::get, xh::setter, xh::getset
 
 ```C++
 #include "function_tools.h"
@@ -48,7 +48,7 @@ template<class Ret>
 class get;
 
 template<class Arg>
-class set;
+class setter;
 
 template<class Ret, class Arg>
 class getset;
@@ -63,7 +63,7 @@ class getset;
 struct A {
   int a;
   const get<int> getA = [this] { return a; };
-  const set<int> setA = [this](int val) { a = val; };
+  const setter<int> setA = [this](int val) { a = val; };
   const getset<int, int> getsetA = {
     [this] { return a; },
     [this](int val) { a = val; }

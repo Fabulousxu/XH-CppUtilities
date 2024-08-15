@@ -21,47 +21,47 @@ struct _auto_return {
 // getter and setter
 
 template<class R>
-class get {
-	function<R()> _get;
+class getter {
+	function<R()> _getter;
  public:
 	template<class T> requires (function_arity_v<T> == 0)
-	get(T &&f) noexcept : _get(forward<T>(f)) {}
-	get &operator=(const get &) = delete;
-	get &operator=(get &&) = delete;
-	operator R() const { return _get(); }
+	getter(T &&f) noexcept : _getter(forward<T>(f)) {}
+	getter &operator=(const getter &) = delete;
+	getter &operator=(getter &&) = delete;
+	operator R() const { return _getter(); }
 };
 
 template<class T>
-get(T) -> get<function_return_t<T>>;
+getter(T) -> getter<function_return_t<T>>;
 
 template<class Arg>
-class set {
-	function<void(Arg)> _set;
+class setter {
+	function<void(Arg)> _setter;
  public:
 	template<class T> requires (function_arity_v<T> == 1
 	  && is_void_v<function_return_t<T>>)
-	set(T &&f) noexcept : _set(forward<T>(f)) {}
-	set &operator=(const set &) = delete;
-	set &operator=(set &&) = delete;
-	void operator=(Arg arg) const { _set(arg); }
+	setter(T &&f) noexcept : _setter(forward<T>(f)) {}
+	setter &operator=(const setter &) = delete;
+	setter &operator=(setter &&) = delete;
+	setter &operator=(Arg arg) const { _setter(arg); }
 };
 
 template<class T>
-set(T) -> set<function_argument_t<T, 0>>;
+setter(T) -> setter<function_argument_t<T, 0>>;
 
 template<class R, class Arg>
 class getset {
-	function<R()> _get;
-	function<void(Arg)> _set;
+	function<R()> _getter;
+	function<void(Arg)> _setter;
  public:
 	template<class T1, class T2> requires (function_arity_v<T1> == 0
 	  && function_arity_v<T2> == 1 && is_void_v<function_return_t<T2>>)
 	getset(T1 &&f1, T2 &&f2) noexcept
-		: _get(forward<T1>(f1)), _set(forward<T2>(f2)) {}
+		: _getter(forward<T1>(f1)), _setter(forward<T2>(f2)) {}
 	getset &operator=(const getset &) = delete;
 	getset &operator=(getset &&) = delete;
-	operator R() const { return _get(); }
-	void operator=(Arg arg) const { _set(arg); }
+	operator R() const { return _getter(); }
+	void operator=(Arg arg) const { _setter(arg); }
 };
 
 template<class T1, class T2>
@@ -121,6 +121,32 @@ _MEMBER_FUNCTION(const volatile, , ...)
 
 template<typename T>
 member_function(T) -> member_function<std::remove_cvref_t<T>>;
+
+
+// multi function
+
+template<class... T>
+struct multi_functor : public T... {
+	constexpr multi_functor(T... f) noexcept : T(f)... {}
+	using T::operator()...;
+};
+
+template<class... T>
+class multi_function {
+	tuple<T...> _multi_function;
+	template<size_t N, class... Args>
+	auto call(Args &&... args) const {
+		static_assert(N < sizeof...(T), "No matching function for call");
+		if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
+			return get<N>(_multi_function)(forward<Args>(args)...);
+		else return call<N + 1>(std::forward<Args>(args)...);
+	}
+ public:
+	constexpr multi_function(T... funcs) noexcept: _multi_function(funcs...) {}
+	template<class... Args>
+	auto operator()(Args &&... args) const
+	{ return call<0>(forward<Args>(args)...); }
+};
 
 
 // promise
