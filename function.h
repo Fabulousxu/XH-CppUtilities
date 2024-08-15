@@ -149,28 +149,28 @@ class multi_function {
 };
 
 
-// promise
+// function_chain
 
 template<typename>
-class promise;
+class function_chain;
 
 template<typename R, typename... Args>
-class promise<R(Args...)> {
-	function<R(Args...)> _promise;
+class function_chain<R(Args...)> {
+	function<R(Args...)> _function_chain;
  public:
 	template<typename T>
-	promise(T &&f) noexcept: _promise(forward<T>(f)) {}
+	function_chain(T &&f) noexcept: _function_chain(forward<T>(f)) {}
 	R operator()(Args &&...args) const
-	{ return _promise(forward<Args>(args)...); }
+	{ return _function_chain(forward<Args>(args)...); }
 	template<typename T>
-	promise<function_return_t<T>(Args...)> then(T &&f)  {
-		return {[f, this](Args &&...args)
-		{ return f(_promise(forward<Args>(args)...)); }};
+	function_chain<function_return_t<T>(Args...)> then(T &&f)  {
+		return {[g = forward<T>(f), this](Args &&...args)
+		{ return g(_function_chain(forward<Args>(args)...)); }};
 	}
 };
 
 template<typename T>
-promise(T) -> promise<function_traits_t<T>>;
+function_chain(T) -> function_chain<function_traits_t<T>>;
 
 }; // namespace xh
 
