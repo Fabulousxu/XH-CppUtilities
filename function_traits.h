@@ -1,283 +1,275 @@
 #ifndef _XH_FUNCTION_TRAITS_H_
 #define _XH_FUNCTION_TRAITS_H_
 
-#include <type_traits>
-#include <functional>
 #include <tuple>
+#include <type_traits>
+
+using namespace std;
 
 namespace xh {
-using
-	std::size_t,
-	std::bool_constant,
-	std::false_type,
-	std::true_type,
-	std::void_t,
-	std::remove_cvref_t,
-	std::remove_pointer_t,
-	std::tuple,
-	std::tuple_element_t,
-	std::function,
-	std::is_member_function_pointer_v,
-	std::is_function_v;
+
+// is function pointer
+
+template<class T>
+inline constexpr bool is_function_pointer_v =
+	is_pointer_v<T> && is_function_v<remove_pointer_t<T>>;
+
+template<class T>
+struct is_function_pointer : bool_constant<is_function_pointer_v<T>> {};
 
 
-// basic function traits
+// is function or pointer
 
-template<typename _T>
-inline constexpr bool is_function_pointer_v
-	= is_function_v<remove_pointer_t<_T>>;
+template<class T>
+inline constexpr bool is_function_or_pointer_v =
+	is_function_v<remove_pointer_t<T>>;
 
-template<typename _T>
-struct is_function_pointer
-	: bool_constant<is_function_pointer_v<_T>> {};
-
-
-template<typename _T>
-inline constexpr bool is_function_or_pointer_v
-	= is_function_v<_T> || is_function_pointer_v<_T>;
-
-template<typename _T>
-struct is_function_or_pointer
-	: bool_constant<is_function_or_pointer_v<_T>> {};
+template<class T>
+struct is_function_or_pointer : bool_constant<is_function_or_pointer_v<T>> {};
 
 
-template<typename, typename = void>
-struct is_functor
-	: false_type {};
+// is functor
 
-template<typename _T>
-struct is_functor<_T, void_t<decltype(&_T::operator())>>
-	: true_type {};
+template<class, class = void>
+struct _is_functor : false_type {};
 
-template<typename _T>
-inline constexpr bool is_functor_v
-	= is_functor<_T>::value;
+template<class T>
+struct _is_functor<T, void_t<decltype(&T::operator())>> : true_type {};
 
+template<class T>
+struct is_functor : _is_functor<T> {};
 
-template<typename _T,
-	bool _Is = is_function_or_pointer_v<_T> || is_functor_v<_T>>
-struct _is_callable_helper
-	: bool_constant<_Is> {};
-
-template<typename _T>
-struct is_callable
-	: _is_callable_helper<remove_cvref_t<_T>> {};
-
-template<typename _T>
-inline constexpr bool is_callable_v
-	= is_callable<_T>::value;
+template<class T>
+inline constexpr bool is_functor_v = is_functor<T>::value;
 
 
 // member function traits
 
-template<typename _T> requires is_member_function_pointer_v<_T>
+template<class>
+struct _member_function_traits {};
+
+#define _MEMBER_FUNCTION_TRAITS(cv, ref, ...)                           \
+  template <class R, class C, class... Args>                            \
+  struct _member_function_traits<R (C::*)(Args...__VA_ARGS__) cv ref> { \
+    using type = R (C::*)(Args...__VA_ARGS__) cv ref;                   \
+    using class_type = cv C ref;                                        \
+    using return_type = R;                                              \
+    using argument_tuple = tuple<Args...>;                              \
+    template <size_t N>                                                 \
+    using argument_type = tuple_element_t<N, argument_tuple>;           \
+    inline static constexpr size_t arity = sizeof...(Args);             \
+  };
+
+#define __MEMBER_FUNCTION_TRAITS(cv)    \
+  _MEMBER_FUNCTION_TRAITS(cv, )         \
+  _MEMBER_FUNCTION_TRAITS(cv, , , ...)  \
+  _MEMBER_FUNCTION_TRAITS(cv, &)        \
+  _MEMBER_FUNCTION_TRAITS(cv, &, , ...) \
+  _MEMBER_FUNCTION_TRAITS(cv, &&)       \
+  _MEMBER_FUNCTION_TRAITS(cv, &&, , ...)
+
+__MEMBER_FUNCTION_TRAITS()
+__MEMBER_FUNCTION_TRAITS(const)
+__MEMBER_FUNCTION_TRAITS(volatile)
+__MEMBER_FUNCTION_TRAITS(const volatile)
+
+#undef _MEMBER_FUNCTION_TRAITS
+#undef __MEMBER_FUNCTION_TRAITS
+
+template<class T> requires is_member_function_pointer_v<remove_cvref_t<T>>
+struct member_function_traits : _member_function_traits<remove_cvref_t<T>> {};
+
+
+// is member function cvref
+
+template<class T> requires is_member_function_pointer_v<T>
+struct is_member_function_const
+	: is_const<typename member_function_traits<T>::class_type> {};
+
+template<class T> requires is_member_function_pointer_v<T>
+struct is_member_function_volatile
+	: is_volatile<typename member_function_traits<T>::class_type> {};
+
+template<class T> requires is_member_function_pointer_v<T>
+struct is_member_function_reference
+	: is_reference<typename member_function_traits<T>::class_type> {};
+
+template<class T> requires is_member_function_pointer_v<T>
+struct is_member_function_lvalue_reference
+	: is_lvalue_reference<typename member_function_traits<T>::class_type> {};
+
+template<class T> requires is_member_function_pointer_v<T>
+struct is_member_function_rvalue_reference
+	: is_rvalue_reference<typename member_function_traits<T>::class_type> {};
+
+template<class T>
+inline constexpr bool is_member_function_const_v =
+	is_member_function_const<T>::value;
+
+template<class T>
+inline constexpr bool is_member_function_volatile_v =
+	is_member_function_volatile<T>::value;
+
+template<class T>
+inline constexpr bool is_member_function_reference_v =
+	is_member_function_reference<T>::value;
+
+template<class T>
+inline constexpr bool is_member_function_lvalue_reference_v =
+	is_member_function_lvalue_reference<T>::value;
+
+template<class T>
+inline constexpr bool is_member_function_rvalue_reference_v =
+	is_member_function_rvalue_reference<T>::value;
+
+
+// remove member function cvref
+
+template<class T> requires is_member_function_pointer_v<T>
 struct remove_member_function_reference {};
 
-template<typename _T>
-using remove_member_function_reference_t
-	= remove_member_function_reference<_T>::type;
-
-template<typename _T> requires is_member_function_pointer_v<_T>
+template<class T> requires is_member_function_pointer_v<T>
 struct remove_member_function_const {};
 
-template<typename _T>
-using remove_member_function_const_t
-	= remove_member_function_const<_T>::type;
-
-template<typename _T> requires is_member_function_pointer_v<_T>
+template<class T> requires is_member_function_pointer_v<T>
 struct remove_member_function_volatile {};
 
-template<typename _T>
-using remove_member_function_volatile_t
-	= remove_member_function_volatile<_T>::type;
-
-template<typename _T> requires is_member_function_pointer_v<_T>
+template<class T> requires is_member_function_pointer_v<T>
 struct remove_member_function_cv {};
 
-template<typename _T>
-using remove_member_function_cv_t
-	= remove_member_function_cv<_T>::type;
+template<class T> requires is_member_function_pointer_v<T>
+struct remove_member_function_cvref {};
 
-template<typename _T> requires is_member_function_pointer_v<_T>
-struct remove_member_function_cvref
-	: remove_member_function_cv<remove_member_function_reference_t<_T>> {};
+#define _REMOVE_MEMBER_FUNCTION(name, cvref, result)                   \
+  template <class R, class C, class... Args>                           \
+  struct remove_member_function_##name<R (C::*)(Args...) cvref>        \
+	{ using type = R (C::*)(Args...) result; };                          \
+  template <class R, class C, class... Args>                           \
+  struct remove_member_function_##name<R (C::*)(Args..., ...) cvref>   \
+	{ using type = R (C::*)(Args..., ...) result; };
 
-template<typename _T>
-using remove_member_function_cvref_t
-	= remove_member_function_cvref<_T>::type;
+#define __REMOVE_MEMBER_FUNCTION(name, _, _lref, _rref, _const, _const_lref, \
+                                 _const_rref, _volatile, _volatile_lref,     \
+                                 _volatile_rref, _cv, _cv_lref, _cv_rref)    \
+  _REMOVE_MEMBER_FUNCTION(name, , _)                                         \
+  _REMOVE_MEMBER_FUNCTION(name, &, _lref)                                    \
+  _REMOVE_MEMBER_FUNCTION(name, &&, _rref)                                   \
+  _REMOVE_MEMBER_FUNCTION(name, const, _const)                               \
+  _REMOVE_MEMBER_FUNCTION(name, const &, _const_lref)                        \
+  _REMOVE_MEMBER_FUNCTION(name, const &&, _const_rref)                       \
+  _REMOVE_MEMBER_FUNCTION(name, volatile, _volatile)                         \
+  _REMOVE_MEMBER_FUNCTION(name, volatile &, _volatile_lref)                  \
+  _REMOVE_MEMBER_FUNCTION(name, volatile &&, _volatile_rref)                 \
+  _REMOVE_MEMBER_FUNCTION(name, const volatile, _cv)                         \
+  _REMOVE_MEMBER_FUNCTION(name, const volatile &, _cv_lref)                  \
+  _REMOVE_MEMBER_FUNCTION(name, const volatile &&, _cv_rref)
 
-#define REMOVE_MEMBER_FUNCTION_QUALIFIERS(remove, qualifiers, result)         \
-template<typename _Ret, typename _C, typename... _Args>                       \
-struct remove_member_function_##remove<_Ret(_C::*)(_Args...) qualifiers>      \
-	{ using type = _Ret(_C::*)(_Args...) result; };                             \
-template<typename _Ret, typename _C, typename... _Args>                       \
-struct remove_member_function_##remove<_Ret(_C::*)(_Args..., ...) qualifiers> \
-	{ using type = _Ret(_C::*)(_Args..., ...) result; };
+__REMOVE_MEMBER_FUNCTION(reference, , , , const, const, const, volatile,
+	volatile, volatile, const volatile, const volatile, const volatile)
+__REMOVE_MEMBER_FUNCTION(const, , &, &&, , const &, const &&, volatile,
+	volatile &, volatile &&, volatile, const volatile &, const volatile &&)
+__REMOVE_MEMBER_FUNCTION(volatile, , &, &&, const, const &, const &&, ,
+	volatile &, volatile &&, const, const volatile &, const volatile &&)
+__REMOVE_MEMBER_FUNCTION(cv, , &, &&, , const &, const &&, , volatile &,
+	volatile &&, , const volatile &, const volatile &&)
+__REMOVE_MEMBER_FUNCTION(cvref, , , , , , , , , , , ,)
 
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, ,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, &,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, &&,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const, const)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const &, const)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const &&, const)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, volatile, volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, volatile &, volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, volatile &&, volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const volatile, const volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const volatile &, const volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(reference, const volatile &&, const volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, ,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, &, &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, &&, &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const &, const &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const &&, const &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, volatile, volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, volatile &, volatile &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, volatile &&, volatile &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const volatile, volatile)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const volatile &, const volatile &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(const, const volatile &&, const volatile &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, ,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, &, &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, &&, &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const, const)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const &, const &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const &&, const &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, volatile,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, volatile &, volatile &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, volatile &&, volatile &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const volatile, const)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const volatile &, const &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(volatile, const volatile &&, const &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, ,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, &, &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, &&, &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const &, const &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const &&, const &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, volatile,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, volatile &, volatile &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, volatile &&, volatile &&)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const volatile,)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const volatile &, const volatile &)
-REMOVE_MEMBER_FUNCTION_QUALIFIERS(cv, const volatile &&, const volatile &&)
+#undef _REMOVE_MEMBER_FUNCTION
+#undef __REMOVE_MEMBER_FUNCTION
 
-#undef REMOVE_MEMBER_FUNCTION_QUALIFIERS
+template<class T>
+using remove_member_function_reference_t =
+	remove_member_function_reference<T>::type;
+
+template<class T>
+using remove_member_function_const_t = remove_member_function_const<T>::type;
+
+template<class T>
+using remove_member_function_volatile_t =
+	remove_member_function_volatile<T>::type;
+
+template<class T>
+using remove_member_function_cv_t = remove_member_function_cv<T>::type;
+
+template<class T>
+using remove_member_function_cvref_t = remove_member_function_cvref<T>::type;
 
 
-template<typename _T>
-struct _remove_member_function_class_helper {};
+// remove member function class
 
-template<typename _T, typename _C>
-struct _remove_member_function_class_helper<_T(_C::*)>
-  { using type = _T; };
+template<class>
+struct _remove_member_function_class {};
 
-template<typename _T> requires is_member_function_pointer_v<_T>
+template<class T, class C>
+struct _remove_member_function_class<T C::*> { using type = T; };
+
+template<class T> requires is_member_function_pointer_v<T>
 struct remove_member_function_class
-	: _remove_member_function_class_helper<remove_member_function_cvref_t<_T>> {};
+	: _remove_member_function_class<remove_member_function_cvref_t<T>> {};
 
-template<typename _T>
-using remove_member_function_class_t
-	= remove_member_function_class<_T>::type;
+template<class T>
+using remove_member_function_class_t = remove_member_function_class<T>::type;
 
 
-// callable traits
+// non member function traits
 
-template<typename _T>
-struct _callable_traits_base {};
+template<class T>
+struct _non_member_function_traits
+	: _non_member_function_traits<
+		remove_member_function_class_t<decltype(&T::operator())>> {};
 
-template<typename _Ret, typename... _Args>
-struct _callable_traits_base<_Ret(_Args...)> {
-  using type = _Ret(_Args...);
-  using return_type = _Ret;
-	using std_type = function<type>;
-	using argument_tuple = tuple<_Args...>;
-	template<size_t _Idx>
-	using argument_type = tuple_element_t<_Idx, argument_tuple>;
-	inline static constexpr size_t arity = sizeof...(_Args);
-};
+#define _NON_MEMBER_FUNCTION_TRAITS(...)                       \
+  template <class R, class... Args>                            \
+  struct _non_member_function_traits<R(Args... __VA_ARGS__)> { \
+    using type = R(Args... __VA_ARGS__);                       \
+    using return_type = R;                                     \
+    using argument_tuple = tuple<Args...>;                     \
+    template <size_t N>                                        \
+    using argument_type = tuple_element_t<N, argument_tuple>;  \
+    inline static constexpr size_t arity = sizeof...(Args);    \
+  };
 
-template<typename _Ret, typename... _Args>
-struct _callable_traits_base<_Ret(_Args..., ...)> {
-  using type = _Ret(_Args..., ...);
-  using return_type = _Ret;
-};
+_NON_MEMBER_FUNCTION_TRAITS()
+_NON_MEMBER_FUNCTION_TRAITS(, ...)
 
-template<typename _T, bool _Is = is_function_or_pointer_v<_T>>
-struct _callable_traits_helper {};
+#undef _NON_MEMBER_FUNCTION_TRAITS
 
-template<typename _T>
-struct _callable_traits_helper<_T, true>
-	: _callable_traits_base<remove_pointer_t<_T>> {};
-
-template<typename _T>
-struct _callable_traits_helper<_T, false>
-	: _callable_traits_base<
-			remove_member_function_class_t<decltype(&_T::operator())>> {};
-
-template<typename _T> requires is_callable_v<_T>
-struct callable_traits
-	: _callable_traits_helper<remove_cvref_t<_T>> {};
-
-template<typename _T>
-using callable_traits_t
-	= callable_traits<_T>::type;
-
-template<typename _T>
-using callable_return_t
-	= callable_traits<_T>::return_type;
-
-template<typename _T>
-using callable_std_t
-	= callable_traits<_T>::std_type;
-
-template<typename _T>
-using callable_argument_tuple
-	= callable_traits<_T>::argument_tuple;
-
-template<typename _T, size_t _Idx>
-using callable_argument_t
-	= callable_traits<_T>::template argument_type<_Idx>;
-
-template<typename _T>
-inline constexpr size_t callable_arity_v
-	= callable_traits<_T>::arity;
+template<class T> requires is_function_or_pointer_v<remove_cvref_t<T>> ||
+	is_functor_v<remove_cvref_t<T>>
+struct non_member_function_traits
+	: _non_member_function_traits<remove_pointer_t<remove_cvref_t<T>>> {};
 
 
 // function traits
 
-template<typename _T>
-struct function_traits
-	: callable_traits<_T> {};
+template<class T, bool Is = is_member_function_pointer_v<T>>
+struct _function_traits : non_member_function_traits<T> {};
 
-template<typename _T>
-using function_traits_t
-	= function_traits<_T>::type;
+template<class T>
+struct _function_traits<T, true> : member_function_traits<T> {};
 
-template<typename _T>
-using function_return_t
-	= function_traits<_T>::return_type;
+template<class T> requires is_function_or_pointer_v<remove_cvref_t<T>> ||
+	is_functor_v<remove_cvref_t<T>> ||
+	is_member_function_pointer_v<remove_cvref_t<T>>
+struct function_traits : _function_traits<remove_cvref_t<T>> {};
 
-template<typename _T>
-using function_std_t
-	= function_traits<_T>::std_type;
+template<class T>
+using function_traits_t = function_traits<T>::type;
 
-template<typename _T>
-using function_argument_tuple
-	= function_traits<_T>::argument_tuple;
+template<class T>
+using function_class_t = function_traits<T>::class_type;
 
-template<typename _T>
-using function_argument_tuple
-	= function_traits<_T>::argument_tuple;
+template<class T>
+using function_return_t = function_traits<T>::return_type;
 
-template<typename _T, size_t _Idx>
-using function_argument_t
-	= function_traits<_T>::template argument_type<_Idx>;
+template<class T>
+using function_argument_tuple = function_traits<T>::argument_tuple;
 
-template<typename _T>
-inline constexpr size_t function_arity_v
-	= function_traits<_T>::arity;
+template<class T, size_t N>
+using function_argument_t = function_traits<T>::template argument_type<N>;
+
+template<class T>
+inline constexpr size_t function_arity_v = function_traits<T>::arity;
 
 };  // namespace xh
 

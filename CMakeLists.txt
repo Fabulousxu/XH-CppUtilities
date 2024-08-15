@@ -4,7 +4,7 @@ project(XH-CppTools)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(XH-CppTools main.cpp
-        function_tools.h
+        function.h
         function_traits.h
         cpp_tools.h
         predicate.h
