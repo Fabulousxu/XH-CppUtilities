@@ -125,18 +125,19 @@ member_function(T) -> member_function<remove_cvref_t<T>>;
 
 // member function proxy
 
-#define MEMBER_FUNCTION_PROXY(member_function_pointer, signature, ...) {       \
-    using class_type =                                                         \
-		  remove_reference_t<function_class_t<decltype(member_function_pointer)>>; \
-    struct member_function_proxy {                                             \
-      auto proxy signature {                                                   \
-        const auto proxy = reinterpret_cast<class_type *>(this);               \
-        { __VA_ARGS__ }                                                        \
-      }                                                                        \
-    };                                                                         \
-    auto proxy = &member_function_proxy::proxy;                                \
-    member_function_pointer = reinterpret_cast<                                \
-        remove_member_function_class_t<decltype(proxy)> class_type::*>(proxy); \
+#define MEMBER_FUNCTION_PROXY(member_function_pointer, signature, ...) {  \
+    using class_type = std::remove_reference_t<                           \
+			xh::function_class_t<decltype(member_function_pointer)>>;           \
+    struct member_function_proxy {                                        \
+      auto proxy signature {                                              \
+        const auto proxy = reinterpret_cast<class_type *>(this);          \
+        { __VA_ARGS__ }                                                   \
+      }                                                                   \
+    };                                                                    \
+    auto proxy = &member_function_proxy::proxy;                           \
+    member_function_pointer = reinterpret_cast<                           \
+      xh::remove_member_function_class_t<decltype(proxy)> class_type::*>( \
+			proxy);                                                             \
   };
 
 
@@ -151,18 +152,27 @@ struct multi_functor : public T... {
 template<class... T>
 class multi_function {
 	tuple<T...> _multi_function;
-	template<size_t N, class... Args>
+	template<size_t N = 0, bool Strict = true, class... Args>
 	auto call(Args &&... args) const {
-		static_assert(N < sizeof...(T), "No matching function for call");
-		if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
-			return get<N>(_multi_function)(forward<Args>(args)...);
-		else return call<N + 1>(std::forward<Args>(args)...);
+		if constexpr (Strict) {
+			if constexpr (N == sizeof...(T))
+				return call<0, false>(forward<Args>(args)...);
+			else if constexpr (is_same_v<function_argument_tuple<
+				tuple_element_t<N, tuple<T...>>>, tuple<Args...>>)
+				return get<N>(_multi_function)(forward<Args>(args)...);
+			else return call<N + 1>(std::forward<Args>(args)...);
+		} else {
+			static_assert(N < sizeof...(T), "No matching function for call");
+			if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
+				return get<N>(_multi_function)(forward<Args>(args)...);
+			else return call<N + 1, false>(std::forward<Args>(args)...);
+		}
 	}
  public:
 	constexpr multi_function(T... funcs) noexcept: _multi_function(funcs...) {}
 	template<class... Args>
 	auto operator()(Args &&... args) const
-	{ return call<0>(forward<Args>(args)...); }
+	{ return call(forward<Args>(args)...); }
 };
 
 
