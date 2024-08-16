@@ -43,7 +43,7 @@ class setter {
 	setter(T &&f) noexcept : _setter(forward<T>(f)) {}
 	setter &operator=(const setter &) = delete;
 	setter &operator=(setter &&) = delete;
-	setter &operator=(Arg arg) const { _setter(arg); }
+	void operator=(Arg arg) const { _setter(arg); }
 };
 
 template<class T>
