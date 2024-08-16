@@ -43,10 +43,10 @@ int main() {
 	// use multi_function to create a function like the reload function
 	xh::multi_function multi_fun = {
 		[](int) { return 0; },
-		[](char) { return 1; }
+		[](char) { return 'a'; }
 	};
 	assert(multi_fun(1) == 0);
-	assert(multi_fun('a') == 1);
+	assert(multi_fun('a') == 'a');
 	assert(multi_fun((short)'a') == 0);
 
 	// use auto_return to return a default value
