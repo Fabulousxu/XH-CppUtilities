@@ -31,13 +31,10 @@ struct is_function_or_pointer : bool_constant<is_function_or_pointer_v<T>> {};
 // is functor
 
 template<class, class = void>
-struct _is_functor : false_type {};
+struct is_functor : false_type {};
 
 template<class T>
-struct _is_functor<T, void_t<decltype(&T::operator())>> : true_type {};
-
-template<class T>
-struct is_functor : _is_functor<T> {};
+struct is_functor<T, void_t<decltype(&T::operator())>> : true_type {};
 
 template<class T>
 inline constexpr bool is_functor_v = is_functor<T>::value;
@@ -45,13 +42,13 @@ inline constexpr bool is_functor_v = is_functor<T>::value;
 
 // member function traits
 
-template<class>
-struct _member_function_traits {};
+template<class T> requires is_member_function_pointer_v<remove_cvref_t<T>>
+struct member_function_traits : member_function_traits<remove_cvref_t<T>> {};
 
 #define _MEMBER_FUNCTION_TRAITS(cv, ref, ...)                           \
   template <class R, class C, class... Args>                            \
-  struct _member_function_traits<R (C::*)(Args...__VA_ARGS__) cv ref> { \
-    using type = R (C::*)(Args...__VA_ARGS__) cv ref;                   \
+  struct member_function_traits<R (C::*)(Args... __VA_ARGS__) cv ref> { \
+    using type = R (C::*)(Args... __VA_ARGS__) cv ref;                  \
     using class_type = cv C ref;                                        \
     using return_type = R;                                              \
     using argument_tuple = tuple<Args...>;                              \
@@ -75,9 +72,6 @@ __MEMBER_FUNCTION_TRAITS(const volatile)
 
 #undef _MEMBER_FUNCTION_TRAITS
 #undef __MEMBER_FUNCTION_TRAITS
-
-template<class T> requires is_member_function_pointer_v<remove_cvref_t<T>>
-struct member_function_traits : _member_function_traits<remove_cvref_t<T>> {};
 
 
 // is member function cvref
@@ -140,12 +134,12 @@ struct remove_member_function_cv {};
 template<class T> requires is_member_function_pointer_v<T>
 struct remove_member_function_cvref {};
 
-#define _REMOVE_MEMBER_FUNCTION(name, cvref, result)                   \
-  template <class R, class C, class... Args>                           \
-  struct remove_member_function_##name<R (C::*)(Args...) cvref>        \
-	{ using type = R (C::*)(Args...) result; };                          \
-  template <class R, class C, class... Args>                           \
-  struct remove_member_function_##name<R (C::*)(Args..., ...) cvref>   \
+#define _REMOVE_MEMBER_FUNCTION(name, cvref, result)                 \
+  template <class R, class C, class... Args>                         \
+  struct remove_member_function_##name<R (C::*)(Args...) cvref>      \
+	{ using type = R (C::*)(Args...) result; };                        \
+  template <class R, class C, class... Args>                         \
+  struct remove_member_function_##name<R (C::*)(Args..., ...) cvref> \
 	{ using type = R (C::*)(Args..., ...) result; };
 
 #define __REMOVE_MEMBER_FUNCTION(name, _, _lref, _rref, _const, _const_lref, \
@@ -197,18 +191,22 @@ using remove_member_function_cvref_t = remove_member_function_cvref<T>::type;
 
 // remove member function class
 
-template<class>
-struct _remove_member_function_class {};
+template<class T> requires is_member_function_pointer_v<T>
+struct remove_member_function_class {};
 
 template<class T, class C>
-struct _remove_member_function_class<T C::*> { using type = T; };
-
-template<class T> requires is_member_function_pointer_v<T>
-struct remove_member_function_class
-	: _remove_member_function_class<remove_member_function_cvref_t<T>> {};
+struct remove_member_function_class<T C::*> { using type = T; };
 
 template<class T>
 using remove_member_function_class_t = remove_member_function_class<T>::type;
+
+template<class T> requires is_member_function_pointer_v<T>
+struct remove_member_function_cvref_class
+	: remove_member_function_class<remove_member_function_cvref_t<T>> {};
+
+template<class T>
+using remove_member_function_cvref_class_t =
+	remove_member_function_cvref_class<T>::type;
 
 
 // non member function traits
@@ -234,24 +232,23 @@ _NON_MEMBER_FUNCTION_TRAITS(, ...)
 
 #undef _NON_MEMBER_FUNCTION_TRAITS
 
-template<class T> requires is_function_or_pointer_v<remove_cvref_t<T>> ||
-	is_functor_v<remove_cvref_t<T>>
+template<class T>
+	requires is_function_or_pointer_v<remove_cvref_t<T>> ||
+	         is_functor_v<remove_cvref_t<T>>
 struct non_member_function_traits
 	: _non_member_function_traits<remove_pointer_t<remove_cvref_t<T>>> {};
 
 
 // function traits
 
-template<class T, bool Is = is_member_function_pointer_v<T>>
-struct _function_traits : non_member_function_traits<T> {};
+template<class T, bool Is = is_member_function_pointer_v<remove_cvref_t<T>>>
+	requires is_function_or_pointer_v<remove_cvref_t<T>> ||
+	         is_functor_v<remove_cvref_t<T>> ||
+					 is_member_function_pointer_v<remove_cvref_t<T>>
+struct function_traits : non_member_function_traits<T> {};
 
 template<class T>
-struct _function_traits<T, true> : member_function_traits<T> {};
-
-template<class T> requires is_function_or_pointer_v<remove_cvref_t<T>> ||
-	is_functor_v<remove_cvref_t<T>> ||
-	is_member_function_pointer_v<remove_cvref_t<T>>
-struct function_traits : _function_traits<remove_cvref_t<T>> {};
+struct function_traits<T, true> : member_function_traits<T> {};
 
 template<class T>
 using function_traits_t = function_traits<T>::type;

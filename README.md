@@ -75,12 +75,12 @@ int main() {
 }
 ```
 
-## xh::member_function
+## xh::_proxy
 ```C++
 #include "function.h"
 
 template<class T>
-class member_function;
+class _proxy;
 ```
 成员函数包装类，重载了括号运算符，支持第一个参数传入类的对象的指针或引用，进行调用成员函数。根据成员函数的cv限定和引用限定，对第一个参数的传入做了不同的适配。 
  
@@ -94,8 +94,8 @@ struct A {
 }
 
 int main() {
-  xh::member_function f1 = &A::fun1;
-  xh::member_function f2 = &A::fun2;
+  xh::_proxy f1 = &A::fun1;
+  xh::_proxy f2 = &A::fun2;
   A a;
   f1(&a, 1);
   f2(A(), 1, 2);
@@ -202,13 +202,13 @@ struct Test{
     Test(int b_=1):b(b_){}
 };
 int main(){
-    int (Test::* ptr)(int) const = nullptr;
-    ADD_METHOD(ptr, (int a) const {
+    int (Test::* member_function_pointer)(int) const = nullptr;
+    ADD_METHOD(member_function_pointer, (int a) const {
        const Test *self = (const Test*)this;
        return a+self->b;
     })
     Test obj;
-    std::cout<<(obj.*ptr)(1);
+    std::cout<<(obj.*member_function_pointer)(1);
 }
 ```
 

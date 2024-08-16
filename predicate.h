@@ -1,6 +1,7 @@
 #ifndef XH_PREDICATE_H
 #define XH_PREDICATE_H
 
+#include <functional>
 #include "function_traits.h"
 
 namespace xh {
@@ -54,7 +55,7 @@ class predicate {
  private:
 	Func __func;
  public:
-	using subject_type = typename function_traits<Func>::argument_type<0>;
+	using subject_type = typename function_traits<Func>::template argument_type<0>;
 	/**
 	 * @brief 构造函数，把一个函数打包成“谓词”形式
 	 * @param func 被打包函数指针

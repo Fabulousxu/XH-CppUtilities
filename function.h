@@ -120,7 +120,24 @@ _MEMBER_FUNCTION(const volatile, , ...)
 #undef _MEMBER_FUNCTION
 
 template<typename T>
-member_function(T) -> member_function<std::remove_cvref_t<T>>;
+member_function(T) -> member_function<remove_cvref_t<T>>;
+
+
+// member function proxy
+
+#define MEMBER_FUNCTION_PROXY(member_function_pointer, signature, ...) {       \
+    using class_type =                                                         \
+		  remove_reference_t<function_class_t<decltype(member_function_pointer)>>; \
+    struct member_function_proxy {                                             \
+      auto proxy signature {                                                   \
+        const auto proxy = reinterpret_cast<class_type *>(this);               \
+        { __VA_ARGS__ }                                                        \
+      }                                                                        \
+    };                                                                         \
+    auto proxy = &member_function_proxy::proxy;                                \
+    member_function_pointer = reinterpret_cast<                                \
+        remove_member_function_class_t<decltype(proxy)> class_type::*>(proxy); \
+  };
 
 
 // multi function

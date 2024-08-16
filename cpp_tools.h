@@ -8,9 +8,6 @@ using namespace std;
 
 namespace xh {
 
-
-
-
 // enum name
 
 template<auto>
@@ -35,7 +32,8 @@ constexpr auto enum_max() {
 	return N;
 }
 
-template<typename T> requires is_enum_v<T>
+template<typename T>
+requires is_enum_v<T>
 constexpr auto enum_name(T value) {
 	constexpr auto num = enum_max<T>();
 	constexpr auto names = []<size_t... N>(std::index_sequence<N...>) {
