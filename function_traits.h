@@ -214,7 +214,7 @@ using remove_member_function_cvref_class_t =
 template<class T>
 struct _non_member_function_traits
 	: _non_member_function_traits<
-		remove_member_function_class_t<decltype(&T::operator())>> {};
+		remove_member_function_cvref_class_t<decltype(&T::operator())>> {};
 
 #define _NON_MEMBER_FUNCTION_TRAITS(...)                       \
   template <class R, class... Args>                            \

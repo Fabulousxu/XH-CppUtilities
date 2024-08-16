@@ -15,7 +15,7 @@ struct _auto_return {
 	operator T() const { return T{}; }
 };
 
-#define auto_return return _auto_return{};
+#define auto_return return xh::_auto_return{};
 
 
 // getter and setter
