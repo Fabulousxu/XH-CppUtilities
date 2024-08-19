@@ -1,7 +1,7 @@
 // C++20 function_traits.h
 // Author: xupeigong@sjtu.edu.cn
 // Last Updated: 2024-08-19
-//
+
 // This header file defines a series of function type traits, expanding on the
 // type traits not fully provided by the standard library for function types.
 // It includes utilities for checking callable types, such as function pointers
@@ -28,7 +28,7 @@ namespace xh {
 
 template<class T>
 struct is_function_pointer
-	: bool_constant<is_pointer_v<T> && is_function_v<remove_pointer_t<T>>> {};
+  : bool_constant<is_pointer_v<T> && is_function_v<remove_pointer_t<T>>> {};
 
 template<class T>
 struct is_function_or_pointer : is_function<remove_pointer_t<T>> {};
@@ -41,7 +41,7 @@ struct is_functor<T, void_t<decltype(&T::operator())>> : true_type {};
 
 template<class T>
 struct is_function_or_pointer_or_functor
-	: bool_constant<is_function_or_pointer<T>::value || is_functor<T>::value> {};
+  : bool_constant<is_function_or_pointer<T>::value || is_functor<T>::value> {};
 
 template<class T>
 struct is_callable : is_function_or_pointer_or_functor<remove_cvref_t<T>> {};
@@ -53,14 +53,14 @@ inline constexpr bool is_function_pointer_v = is_function_pointer<T>::value;
 
 template<class T>
 inline constexpr bool is_function_or_pointer_v =
-	is_function_or_pointer<T>::value;
+  is_function_or_pointer<T>::value;
 
 template<class T>
 inline constexpr bool is_functor_v = is_functor<T>::value;
 
 template<class T>
 inline constexpr bool is_function_or_pointer_or_functor_v =
-	is_function_or_pointer_or_functor<T>::value;
+  is_function_or_pointer_or_functor<T>::value;
 
 template<class T>
 inline constexpr bool is_callable_v = is_callable<T>::value;
@@ -71,9 +71,9 @@ inline constexpr bool is_callable_v = is_callable<T>::value;
  **************************/
 
 template<class T> requires is_member_function_pointer_v<remove_cvref_t<T>>
-struct member_function_traits	: member_function_traits<remove_cvref_t<T>> {};
+struct member_function_traits : member_function_traits<remove_cvref_t<T>> {};
 
-#define _MEMBER_FUNCTION_TRAITS(cv, ref, ...)                   \
+#define _MEMBER_FUNCTION_TRAITS(cv, ref, ...)                           \
   template <class R, class C, class... Args>                            \
   struct member_function_traits<R (C::*)(Args... __VA_ARGS__) cv ref> { \
     using type = R (C::*)(Args... __VA_ARGS__) cv ref;                  \
@@ -114,15 +114,15 @@ using member_function_return_t = member_function_traits<T>::return_type;
 
 template<class T>
 using member_function_argument_tuple =
-	member_function_traits<T>::argument_tuple;
+  member_function_traits<T>::argument_tuple;
 
 template<class T, size_t N>
 using member_function_argument_t =
-	member_function_traits<T>::template argument_type<N>;
+  member_function_traits<T>::template argument_type<N>;
 
 template<class T>
 inline constexpr size_t member_function_arity_v =
-	member_function_traits<T>::arity;
+  member_function_traits<T>::arity;
 
 
 /******************************************
@@ -137,37 +137,37 @@ struct is_member_function_volatile : is_volatile<member_function_class_t<T>> {};
 
 template<class T> requires is_member_function_pointer_v<T>
 struct is_member_function_reference
-	: is_reference<member_function_class_t<T>> {};
+  : is_reference<member_function_class_t<T>> {};
 
 template<class T> requires is_member_function_pointer_v<T>
 struct is_member_function_lvalue_reference
-	: is_lvalue_reference<member_function_class_t<T>> {};
+  : is_lvalue_reference<member_function_class_t<T>> {};
 
 template<class T> requires is_member_function_pointer_v<T>
 struct is_member_function_rvalue_reference
-	: is_rvalue_reference<member_function_class_t<T>> {};
+  : is_rvalue_reference<member_function_class_t<T>> {};
 
 // _t aliases and _v variables
 
 template<class T>
 inline constexpr bool is_member_function_const_v =
-	is_member_function_const<T>::value;
+  is_member_function_const<T>::value;
 
 template<class T>
 inline constexpr bool is_member_function_volatile_v =
-	is_member_function_volatile<T>::value;
+  is_member_function_volatile<T>::value;
 
 template<class T>
 inline constexpr bool is_member_function_reference_v =
-	is_member_function_reference<T>::value;
+  is_member_function_reference<T>::value;
 
 template<class T>
 inline constexpr bool is_member_function_lvalue_reference_v =
-	is_member_function_lvalue_reference<T>::value;
+  is_member_function_lvalue_reference<T>::value;
 
 template<class T>
 inline constexpr bool is_member_function_rvalue_reference_v =
-	is_member_function_rvalue_reference<T>::value;
+  is_member_function_rvalue_reference<T>::value;
 
 
 /************************************************
@@ -191,16 +191,14 @@ struct remove_member_function_cvref {};
 
 #define _REMOVE_MEMBER_FUNCTION(name, cvref, result)                   \
   template <class R, class C, class... Args>                           \
-  struct remove_member_function_##name<R (C::*)(Args...) cvref> {      \
-    using type = R (C::*)(Args...) result;                             \
-  };                                                                   \
+  struct remove_member_function_##name<R (C::*)(Args...) cvref>        \
+  { using type = R (C::*)(Args...) result; };                          \
   template <class R, class C, class... Args>                           \
-  struct remove_member_function_##name<R (C::*)(Args..., ...) cvref> { \
-    using type = R (C::*)(Args..., ...) result;                        \
-  };
+  struct remove_member_function_##name<R (C::*)(Args..., ...) cvref>   \
+  { using type = R (C::*)(Args..., ...) result; };
 
 #define __REMOVE_MEMBER_FUNCTION(name, _, _lref, _rref, _const, _const_lref, \
-                                 _const_rref, _volatile, _volatile_lref, \
+                                 _const_rref, _volatile, _volatile_lref,     \
                                  _volatile_rref, _cv, _cv_lref, _cv_rref)    \
   _REMOVE_MEMBER_FUNCTION(name, , _)                                         \
   _REMOVE_MEMBER_FUNCTION(name, &, _lref)                                    \
@@ -216,13 +214,13 @@ struct remove_member_function_cvref {};
   _REMOVE_MEMBER_FUNCTION(name, const volatile &&, _cv_rref)
 
 __REMOVE_MEMBER_FUNCTION(reference, , , , const, const, const, volatile,
-	volatile, volatile, const volatile, const volatile, const volatile)
+  volatile, volatile, const volatile, const volatile, const volatile)
 __REMOVE_MEMBER_FUNCTION(const, , &, &&, , const &, const &&, volatile,
-	volatile &, volatile &&, volatile, const volatile &, const volatile &&)
+  volatile &, volatile &&, volatile, const volatile &, const volatile &&)
 __REMOVE_MEMBER_FUNCTION(volatile, , &, &&, const, const &, const &&, ,
-	volatile &, volatile &&, const, const volatile &, const volatile &&)
+  volatile &, volatile &&, const, const volatile &, const volatile &&)
 __REMOVE_MEMBER_FUNCTION(cv, , &, &&, , const &, const &&, , volatile &,
-	volatile &&, , const volatile &, const volatile &&)
+  volatile &&, , const volatile &, const volatile &&)
 __REMOVE_MEMBER_FUNCTION(cvref, , , , , , , , , , , ,)
 
 #undef _REMOVE_MEMBER_FUNCTION
@@ -235,22 +233,21 @@ template<class T, class C>
 struct remove_member_function_class<T C::*> { using type = T; };
 
 template<class T> requires is_member_function_pointer_v<T>
-struct remove_member_function_cvref_class
-	: remove_member_function_class<
-		typename remove_member_function_cvref<T>::type> {};
+struct remove_member_function_cvref_class : remove_member_function_class<
+  typename remove_member_function_cvref<T>::type> {};
 
 // _t aliases and _v variables
 
 template<class T>
 using remove_member_function_reference_t =
-	remove_member_function_reference<T>::type;
+  remove_member_function_reference<T>::type;
 
 template<class T>
 using remove_member_function_const_t = remove_member_function_const<T>::type;
 
 template<class T>
 using remove_member_function_volatile_t =
-	remove_member_function_volatile<T>::type;
+  remove_member_function_volatile<T>::type;
 
 template<class T>
 using remove_member_function_cv_t = remove_member_function_cv<T>::type;
@@ -263,7 +260,7 @@ using remove_member_function_class_t = remove_member_function_class<T>::type;
 
 template<class T>
 using remove_member_function_cvref_class_t =
-	remove_member_function_cvref_class<T>::type;
+  remove_member_function_cvref_class<T>::type;
 
 
 /*******************
@@ -272,8 +269,8 @@ using remove_member_function_cvref_class_t =
 
 template<class T> requires is_function_or_pointer_or_functor_v<T>
 struct function_or_pointer_or_functor_traits
-	: function_or_pointer_or_functor_traits<
-		remove_member_function_cvref_class_t<decltype(&T::operator())>> {};
+  : function_or_pointer_or_functor_traits<
+    remove_member_function_cvref_class_t<decltype(&T::operator())>> {};
 
 #define _FUNCTION_OR_POINTER_OR_FUNCTOR_TRAITS(...)                      \
   template <class R, class... Args>                                      \
@@ -293,7 +290,7 @@ _FUNCTION_OR_POINTER_OR_FUNCTOR_TRAITS(, ...)
 
 template<class T> requires is_callable_v<T>
 struct callable_traits : function_or_pointer_or_functor_traits<
-	remove_pointer_t<remove_cvref_t<T>>> {};
+  remove_pointer_t<remove_cvref_t<T>>> {};
 
 // _t aliases and _v variables
 

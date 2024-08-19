@@ -1,3 +1,14 @@
+// C++20 function.h
+// Author: xupeigong@sjtu.edu.cn, 1583913466@qq.com
+// Last Updated: 2024-08-19
+
+// This header file defines a series of utilities for function wrapping,
+// extending some of the capabilities not provided by the standard library. It
+// includes implementations for getter and setter properties of classes,
+// improved encapsulation of member functions, the addition of proxy functions
+// for member functions, support for overloading-like function wrappers, and
+// the implementation of chainable function calls.
+
 #ifndef _XH_FUNCTION_TOOLS_H_
 #define _XH_FUNCTION_TOOLS_H_
 
@@ -8,27 +19,17 @@ using namespace std;
 
 namespace xh {
 
-// auto return
-
-struct _auto_return {
-	template<class T>
-	operator T() const { return T{}; }
-};
-
-#define auto_return return xh::_auto_return{};
-
-
-// getter and setter
+/*********************
+ * getter and setter *
+ *********************/
 
 template<class R>
 class getter {
-	function<R()> _getter;
+  function<R()> _getter;
  public:
-	template<class T> requires (function_arity_v<T> == 0)
-	getter(T &&f) noexcept : _getter(forward<T>(f)) {}
-	getter &operator=(const getter &) = delete;
-	getter &operator=(getter &&) = delete;
-	operator R() const { return _getter(); }
+  template<class T>
+  getter(T &&f) noexcept : _getter(forward<T>(f)) {}
+  operator R() const { return _getter(); }
 };
 
 template<class T>
@@ -36,14 +37,11 @@ getter(T) -> getter<function_return_t<T>>;
 
 template<class Arg>
 class setter {
-	function<void(Arg)> _setter;
+  function<void(Arg)> _setter;
  public:
-	template<class T> requires (function_arity_v<T> == 1
-	  && is_void_v<function_return_t<T>>)
-	setter(T &&f) noexcept : _setter(forward<T>(f)) {}
-	setter &operator=(const setter &) = delete;
-	setter &operator=(setter &&) = delete;
-	void operator=(Arg arg) const { _setter(arg); }
+  template<class T>
+  setter(T &&f) noexcept : _setter(forward<T>(f)) {}
+  void operator=(Arg arg) const { _setter(arg); }
 };
 
 template<class T>
@@ -51,24 +49,23 @@ setter(T) -> setter<function_argument_t<T, 0>>;
 
 template<class R, class Arg>
 class getset {
-	function<R()> _getter;
-	function<void(Arg)> _setter;
+  function<R()> _getter;
+  function<void(Arg)> _setter;
  public:
-	template<class T1, class T2> requires (function_arity_v<T1> == 0
-	  && function_arity_v<T2> == 1 && is_void_v<function_return_t<T2>>)
-	getset(T1 &&f1, T2 &&f2) noexcept
-		: _getter(forward<T1>(f1)), _setter(forward<T2>(f2)) {}
-	getset &operator=(const getset &) = delete;
-	getset &operator=(getset &&) = delete;
-	operator R() const { return _getter(); }
-	void operator=(Arg arg) const { _setter(arg); }
+  template<class T1, class T2>
+  getset(T1 &&f1, T2 &&f2) noexcept
+      : _getter(forward<T1>(f1)), _setter(forward<T2>(f2)) {}
+  operator R() const { return _getter(); }
+  void operator=(Arg arg) const { _setter(arg); }
 };
 
 template<class T1, class T2>
 getset(T1, T2) -> getset<function_return_t<T1>, function_argument_t<T2, 0>>;
 
 
-// member function
+/*******************
+ * member function *
+ *******************/
 
 template<class>
 class member_function {};
@@ -80,12 +77,12 @@ class member_function {};
    public:                                                               \
     template<typename T>                                                 \
     member_function(T &&f) noexcept : _member_function(forward<T>(f)) {} \
-	  R operator()(cv C &obj, Args... args __VA_ARGS__) const              \
-	  { return (obj.*_member_function)(args...); }                         \
-	  R operator()(cv C &&obj, Args... args __VA_ARGS__) const             \
-	  { return (move(obj).*_member_function)(args...); }                   \
+    R operator()(cv C &obj, Args... args __VA_ARGS__) const              \
+    { return (obj.*_member_function)(args...); }                         \
+    R operator()(cv C &&obj, Args... args __VA_ARGS__) const             \
+    { return (move(obj).*_member_function)(args...); }                   \
     R operator()(cv C *const obj, Args... args __VA_ARGS__) const        \
-	  { return (obj->*_member_function)(args...); }                        \
+    { return (obj->*_member_function)(args...); }                        \
   };                                                                     \
   template <typename R, typename C, typename... Args>                    \
   class member_function<R (C::*)(Args... __VA_ARGS__) cv &> {            \
@@ -93,10 +90,10 @@ class member_function {};
    public:                                                               \
     template<typename T>                                                 \
     member_function(T &&f) noexcept : _member_function(forward<T>(f)) {} \
-  	R operator()(cv C &obj, Args... args __VA_ARGS__) const              \
-  	{ return (obj.*_member_function)(args...); }                         \
+    R operator()(cv C &obj, Args... args __VA_ARGS__) const              \
+    { return (obj.*_member_function)(args...); }                         \
     R operator()(cv C *const obj, Args... args __VA_ARGS__) const        \
-	  { return (obj->*_member_function)(args...); }                        \
+    { return (obj->*_member_function)(args...); }                        \
   };                                                                     \
   template <typename R, typename C, typename... Args>                    \
   class member_function<R (C::*)(Args... __VA_ARGS__) cv &&> {           \
@@ -104,8 +101,8 @@ class member_function {};
    public:                                                               \
     template<typename T>                                                 \
     member_function(T &&f) noexcept : _member_function(forward<T>(f)) {} \
-	  R operator()(cv C &&obj, Args... args __VA_ARGS__) const             \
-	  { return (move(obj).*_member_function)(args...); }                   \
+    R operator()(cv C &&obj, Args... args __VA_ARGS__) const             \
+    { return (move(obj).*_member_function)(args...); }                   \
   };
 
 _MEMBER_FUNCTION()
@@ -123,11 +120,13 @@ template<typename T>
 member_function(T) -> member_function<remove_cvref_t<T>>;
 
 
-// member function proxy
+/*************************
+ * member function proxy *
+ *************************/
 
 #define MEMBER_FUNCTION_PROXY(member_function_pointer, signature, ...) {  \
     using class_type = std::remove_reference_t<                           \
-			xh::function_class_t<decltype(member_function_pointer)>>;           \
+      xh::function_class_t<decltype(member_function_pointer)>>;           \
     struct member_function_proxy {                                        \
       auto proxy signature {                                              \
         const auto proxy = reinterpret_cast<class_type *>(this);          \
@@ -137,63 +136,66 @@ member_function(T) -> member_function<remove_cvref_t<T>>;
     auto proxy = &member_function_proxy::proxy;                           \
     member_function_pointer = reinterpret_cast<                           \
       xh::remove_member_function_class_t<decltype(proxy)> class_type::*>( \
-			proxy);                                                             \
+      proxy);                                                             \
   };
 
 
-// multi function
+/******************
+ * multi function *
+ ******************/
 
 template<class... T>
-struct multi_functor : public T... {
-	constexpr multi_functor(T... f) noexcept : T(f)... {}
-	using T::operator()...;
+struct multi_functor : T ... {
+  using T::operator()...;
+  constexpr multi_functor(T... f) noexcept: T(f)... {}
 };
 
 template<class... T>
 class multi_function {
-	tuple<T...> _multi_function;
-	template<size_t N = 0, bool Strict = true, class... Args>
-	auto call(Args &&... args) const {
-		if constexpr (Strict) {
-			if constexpr (N == sizeof...(T))
-				return call<0, false>(forward<Args>(args)...);
-			else if constexpr (is_same_v<function_argument_tuple<
-				tuple_element_t<N, tuple<T...>>>, tuple<Args...>>)
-				return get<N>(_multi_function)(forward<Args>(args)...);
-			else return call<N + 1>(std::forward<Args>(args)...);
-		} else {
-			static_assert(N < sizeof...(T), "No matching function for call");
-			if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
-				return get<N>(_multi_function)(forward<Args>(args)...);
-			else return call<N + 1, false>(std::forward<Args>(args)...);
-		}
-	}
+  tuple<T...> _multi_function;
+  template<size_t N = 0, bool Strict = true, class... Args>
+  auto call(Args &&... args) const {
+    if constexpr (Strict) {
+      if constexpr (N == sizeof...(T))
+        return call<0, false>(forward<Args>(args)...);
+      else if constexpr (is_same_v<function_argument_tuple<
+          tuple_element_t<N, tuple<T...>>>, tuple<Args...>>)
+        return get<N>(_multi_function)(forward<Args>(args)...);
+      else return call<N + 1>(std::forward<Args>(args)...);
+    } else {
+      static_assert(N < sizeof...(T), "No matching function for call");
+      if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
+        return get<N>(_multi_function)(forward<Args>(args)...);
+      else return call<N + 1, false>(std::forward<Args>(args)...);
+    }
+  }
  public:
-	constexpr multi_function(T... funcs) noexcept: _multi_function(funcs...) {}
-	template<class... Args>
-	auto operator()(Args &&... args) const
-	{ return call(forward<Args>(args)...); }
+  constexpr multi_function(T... funcs) noexcept: _multi_function(funcs...) {}
+  template<class... Args>
+  auto operator()(Args &&... args) const { return call(forward<Args>(args)...); }
 };
 
 
-// function_chain
+/******************
+ * function chain *
+ ******************/
 
-template<typename>
+template<class>
 class function_chain;
 
-template<typename R, typename... Args>
+template<class R, class... Args>
 class function_chain<R(Args...)> {
-	function<R(Args...)> _function_chain;
+  function<R(Args...)> _function_chain;
  public:
-	template<typename T>
-	function_chain(T &&f) noexcept: _function_chain(forward<T>(f)) {}
-	R operator()(Args &&...args) const
-	{ return _function_chain(forward<Args>(args)...); }
-	template<typename T>
-	function_chain<function_return_t<T>(Args...)> then(T &&f)  {
-		return {[g = forward<T>(f), this](Args &&...args)
-		{ return g(_function_chain(forward<Args>(args)...)); }};
-	}
+  template<typename T>
+  function_chain(T &&f) noexcept: _function_chain(forward<T>(f)) {}
+  R operator()(Args &&...args) const { return _function_chain(forward<Args>(args)...); }
+  template<typename T>
+  function_chain<function_return_t<T>(Args...)> then(T &&f) {
+    return {[g = forward<T>(f), this](Args &&...args) {
+      return g(_function_chain(forward<Args>(args)...));
+    }};
+  }
 };
 
 template<typename T>
