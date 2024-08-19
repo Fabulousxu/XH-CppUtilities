@@ -1,3 +1,17 @@
+// C++20 function_traits.h
+// Author: xupeigong@sjtu.edu.cn
+// Last Updated: 2024-08-19
+//
+// This header file defines a series of function type traits, expanding on the
+// type traits not fully provided by the standard library for function types.
+// It includes utilities for checking callable types, such as function pointers
+// and functors, and for checking and removing qualifiers of member functions.
+// Most mainly, it offers function traits for callable types and member
+// functions, allowing users to get function return types, argument types, and
+// the class type of member functions. This function traits supports variadic
+// functions and recognizes and erases cv-qualifiers and reference-qualifiers
+// from any callable types and member functions.
+
 #ifndef _XH_FUNCTION_TRAITS_H_
 #define _XH_FUNCTION_TRAITS_H_
 
@@ -8,12 +22,9 @@ using namespace std;
 
 namespace xh {
 
-/*******************************************
- * check if is callable or member function *
- *******************************************/
-
-template<class T>
-struct is_function : std::is_function<T> {};
+/************************
+ * check if is callable *
+ ************************/
 
 template<class T>
 struct is_function_pointer
@@ -35,13 +46,7 @@ struct is_function_or_pointer_or_functor
 template<class T>
 struct is_callable : is_function_or_pointer_or_functor<remove_cvref_t<T>> {};
 
-template<class T>
-struct is_member_function_pointer : std::is_member_function_pointer<T> {};
-
 // _t aliases and _v variables
-
-template<class T>
-inline constexpr bool is_function_v = is_function<T>::value;
 
 template<class T>
 inline constexpr bool is_function_pointer_v = is_function_pointer<T>::value;
@@ -60,50 +65,41 @@ inline constexpr bool is_function_or_pointer_or_functor_v =
 template<class T>
 inline constexpr bool is_callable_v = is_callable<T>::value;
 
-template<class T>
-inline constexpr bool is_member_function_pointer_v =
-	is_member_function_pointer<T>::value;
-
 
 /**************************
  * member function traits *
  **************************/
 
-template<class T> requires is_member_function_pointer_v<T>
-struct member_function_pointer_traits {};
+template<class T> requires is_member_function_pointer_v<remove_cvref_t<T>>
+struct member_function_traits	: member_function_traits<remove_cvref_t<T>> {};
 
-#define _MEMBER_FUNCTION_POINTER_TRAITS(cv, ref, ...)                 \
-  template <class R, class C, class... Args>                          \
-  struct member_function_pointer_traits<R (C::*)(Args... __VA_ARGS__) \
-                                            cv ref> {                 \
-    using type = R (C::*)(Args... __VA_ARGS__) cv ref;                \
-    using class_type = cv C ref;                                      \
-    using return_type = R;                                            \
-    using argument_tuple = tuple<Args...>;                            \
-    template <size_t N>                                               \
-    using argument_type = tuple_element_t<N, argument_tuple>;         \
-    inline static constexpr size_t arity = sizeof...(Args);           \
+#define _MEMBER_FUNCTION_TRAITS(cv, ref, ...)                   \
+  template <class R, class C, class... Args>                            \
+  struct member_function_traits<R (C::*)(Args... __VA_ARGS__) cv ref> { \
+    using type = R (C::*)(Args... __VA_ARGS__) cv ref;                  \
+    using class_type = cv C ref;                                        \
+    using return_type = R;                                              \
+    using argument_tuple = tuple<Args...>;                              \
+    template <size_t N>                                                 \
+    using argument_type = tuple_element_t<N, argument_tuple>;           \
+    inline static constexpr size_t arity = sizeof...(Args);             \
   };
 
-#define __MEMBER_FUNCTION_POINTER_TRAITS(cv)    \
-  _MEMBER_FUNCTION_POINTER_TRAITS(cv, )         \
-  _MEMBER_FUNCTION_POINTER_TRAITS(cv, , , ...)  \
-  _MEMBER_FUNCTION_POINTER_TRAITS(cv, &)        \
-  _MEMBER_FUNCTION_POINTER_TRAITS(cv, &, , ...) \
-  _MEMBER_FUNCTION_POINTER_TRAITS(cv, &&)       \
-  _MEMBER_FUNCTION_POINTER_TRAITS(cv, &&, , ...)
+#define __MEMBER_FUNCTION_TRAITS(cv)    \
+  _MEMBER_FUNCTION_TRAITS(cv, )         \
+  _MEMBER_FUNCTION_TRAITS(cv, , , ...)  \
+  _MEMBER_FUNCTION_TRAITS(cv, &)        \
+  _MEMBER_FUNCTION_TRAITS(cv, &, , ...) \
+  _MEMBER_FUNCTION_TRAITS(cv, &&)       \
+  _MEMBER_FUNCTION_TRAITS(cv, &&, , ...)
 
-__MEMBER_FUNCTION_POINTER_TRAITS()
-__MEMBER_FUNCTION_POINTER_TRAITS(const)
-__MEMBER_FUNCTION_POINTER_TRAITS(volatile)
-__MEMBER_FUNCTION_POINTER_TRAITS(const volatile)
+__MEMBER_FUNCTION_TRAITS()
+__MEMBER_FUNCTION_TRAITS(const)
+__MEMBER_FUNCTION_TRAITS(volatile)
+__MEMBER_FUNCTION_TRAITS(const volatile)
 
-#undef _MEMBER_FUNCTION_POINTER_TRAITS
-#undef __MEMBER_FUNCTION_POINTER_TRAITS
-
-template<class T>
-struct member_function_traits
-	: member_function_pointer_traits<remove_cvref_t<T>> {};
+#undef _MEMBER_FUNCTION_TRAITS
+#undef __MEMBER_FUNCTION_TRAITS
 
 // _t aliases and _v variables
 
@@ -279,7 +275,7 @@ struct function_or_pointer_or_functor_traits
 	: function_or_pointer_or_functor_traits<
 		remove_member_function_cvref_class_t<decltype(&T::operator())>> {};
 
-#define _CALLABLE_TRAITS(...)                                            \
+#define _FUNCTION_OR_POINTER_OR_FUNCTOR_TRAITS(...)                      \
   template <class R, class... Args>                                      \
   struct function_or_pointer_or_functor_traits<R(Args... __VA_ARGS__)> { \
     using type = R(Args... __VA_ARGS__);                                 \
@@ -290,10 +286,10 @@ struct function_or_pointer_or_functor_traits
     inline static constexpr size_t arity = sizeof...(Args);              \
   };
 
-_CALLABLE_TRAITS()
-_CALLABLE_TRAITS(, ...)
+_FUNCTION_OR_POINTER_OR_FUNCTOR_TRAITS()
+_FUNCTION_OR_POINTER_OR_FUNCTOR_TRAITS(, ...)
 
-#undef _CALLABLE_TRAITS
+#undef _FUNCTION_OR_POINTER_OR_FUNCTOR_TRAITS
 
 template<class T> requires is_callable_v<T>
 struct callable_traits : function_or_pointer_or_functor_traits<
