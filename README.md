@@ -24,13 +24,6 @@ You need C++20 or a later version. The compiler can be GCC, MinGW, or MSVC. Othe
 
 ## Files
 
-XH-CppTools/
-│
-├──function_traits.h
-├──function.h
-├──cpp_tools.h
-└──tutorial.cpp
-
 - function_traits.h: Include function traits.
 - function.h: Include getter and setter, member function, multi function, function chain and function pipe.
 - cpp_tools.h: Include enum name and other cpp tools.
