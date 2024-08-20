@@ -44,10 +44,23 @@ class A : public xh::comparable<A> {
   }
 };
 
+int fun_0(int) { return 0; }
+
 int reload_fun(int) { return 0; }
 char reload_fun(char) { return 'a'; }
 
 int main() {
+  // function traits
+  const auto &&fun_1 = [](int) { return 0; };
+  static_assert(std::is_same_v<xh::function_traits_t<decltype(&fun_0)>,
+                               int(int)>);
+  static_assert(std::is_same_v<xh::function_traits_t<decltype(fun_1)>,
+                               int(int)>);
+  static_assert(std::is_same_v<xh::function_traits_t<decltype(&A::add)>,
+                               int (A::*)(int) volatile>);
+  static_assert(std::is_same_v<xh::function_class_t<decltype(&A::add)>,
+                               A volatile>);
+
   A a = 10;
 
   // use getter and setter to get or set some value after processed
@@ -88,17 +101,11 @@ int main() {
       .then([](int res) { assert(res == (1 + 2) * 2); })
           (1, 2);
 
-  // function traits
-  auto fun_0 = [](int) { return 0; };
-  const auto &&fun_1 = [](int) { return 0; };
-  static_assert(std::is_same_v<xh::function_traits_t<decltype(fun_0)>,
-                               int(int)>);
-  static_assert(std::is_same_v<xh::function_traits_t<decltype(fun_1)>,
-                               int(int)>);
-  static_assert(std::is_same_v<xh::function_traits_t<decltype(&A::add)>,
-                               int (A::*)(int) volatile>);
-  static_assert(std::is_same_v<xh::function_class_t<decltype(&A::add)>,
-                               A volatile>);
+  // use function_pipe to call functions pipe-likely
+  xh::function_pipe pf1 = [](int a, int b) { return a + b; };
+  xh::function_pipe pf2 = [](int a) { return a * 2; };
+  xh::function_pipe pf3 = [](int res) { assert(res == (1 + 2) * 2); };
+  1 | pf1(2) | pf2 | pf3;
 
   // use auto_return to return a default value
   auto_return;

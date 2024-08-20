@@ -1,215 +1,231 @@
 # XH-CppTools
 
-本项目实现了一些对c++一些小功能的扩展，需使用c++20及以上版本，敬请使用。以下是对几个重要功能的说明。详细的全部功能详见几个头文件，内含说明。
+## Authors
 
-## xh::function_traits
-```C++
-#include "function_traits.h"
+- xupeigong@sjtu.edu.cn
+- 1583913466@qq.com
 
-template<class T>
-struct function_traits;
-```
-函数类型萃取，用于获取函数、函数指针、成员函数指针、仿函数、匿名函数及以上所有类型的cv限定类型和引用限定类型的组成信息，包括以下成员类型： 
-| 成员类型 | 说明 |
-| :---: | :---: |
-| type | 去除引用限定和cv限定后的类型 |
-| class_type | 成员函数的类，根据成员函数的cv限定和引用限定而添加相应限定后的类型 |
-| return_type | 返回值类型 |
-| argument_tuple | 参数包的std::tuple |
-| template\<size_t N\> argument_type | 第N个参数类型 |
-| arity | 参数个数 |
+## Overview
 
-其中，对不定参数函数进行函数类型萃取时，argument_tuple仅是确定参数的参数包，argument_t仅支持查找确定参数的类型，arity是确定参数的个数。 
+XH-CppTools is a collection of utility functions and classes for enhancing C++ functionality. It includes tools for function traits, getter and setter properties, advanced encapsulation of member functions, function overloading-like wrappers, chainable function calls, and more. This library is designed to extend C++ capabilities beyond what's offered by the standard library, with an emphasis on ease of use and flexibility.
+
+## Environment
+
+You need C++20 or a later version. The compiler can be GCC, MinGW, or MSVC. Other compilers have not been tested by the author.
+
+## Features
+
+- Function Traits: Offers introspection of function types and properties.
+- Getter and Setter: Simplifies the creation of getter and setter properties in C++ classes.
+- Member Function Wrapping: Provides utilities for better encapsulation and usage of member functions.
+- Function Overloading: Implements multi-functionality to mimic function overloading in a more flexible way.
+- Function Chaining: Allows chaining of functions for cleaner and more readable code.
+- Pipe-like Function Calls: Supports pipe-like syntax for function execution.
+
+## Files
+
+XH-CppTools/
+│
+├──function_traits.h
+├──function.h
+├──cpp_tools.h
+└──tutorial.cpp
+
+- function_traits.h: Include function traits.
+- function.h: Include getter and setter, member function, multi function, function chain and function pipe.
+- cpp_tools.h: Include enum name and other cpp tools.
+- tutorial.cpp: A simple tutorial for this project.
+
+## Examples
+
+In the `tutorial.cpp` file, we provide a concise yet comprehensive tutorial that covers various aspects of this project. Below, we showcase a few of the most important examples. To fully leverage these utilities and understand the underlying principles, please refer to the source code and tutorial in detail.
+
+### xh::function_traits
+
+Function traits allow you to introspect function types, making it easier to work with template metaprogramming. They are used to extract and obtain the composition information of function types, function pointers, member function pointers, functors, lambda expressions, and the cv-qualifiers and reference qualifiers for all these types. This includes the following member types:
  
-示例代码：
+| Member Type | Description |
+| :---: | :---: |
+| type | Type after removing reference and cv-qualifiers |
+| class_type | The class type of a member function, with appropriate qualifiers added based on the member function's cv-qualifiers and reference qualifiers |
+| return_type | Return type |
+| argument_tuple | Parameter pack as std::tuple |
+| template\<size_t N\> argument_type | Nth parameter type |
+| arity | Number of parameters |
+
+We also provide support for variadic functions. When extracting function type traits for variadic functions, `argument_tuple` contains only the parameter pack of the fixed arguments, `argument_type` only supports looking up types for fixed arguments and `arity` represents the number of fixed parameters.
+
 ```C++
 #include "function_traits.h"
 
-void fun(int) {}
-struct A { void fun(int) const {} };
+int fun_0(int) { return 0; }
+class A {
+ public:
+  int num;
+  int add(int n) volatile {
+    num += n;
+    return num;
+  }
+};
 
 int main() {
-  static_assert(std::is_same_v<xh::function_traits<decltype(&fun)>::type, void(int)>);
-  static_assert(std::is_same_v<xh::function_traits<decltype(&A::fun)>::class_type, const A>);
+  const auto &&fun_1 = [](int) { return 0; };
+  static_assert(std::is_same_v<xh::function_traits_t<decltype(&fun_0)>, int(int)>);
+  static_assert(std::is_same_v<xh::function_traits_t<decltype(fun_1)>, int(int)>);
+  static_assert(std::is_same_v<xh::function_traits_t<decltype(&A::add)>, int (A::*)(int) volatile>);
+  static_assert(std::is_same_v<xh::function_class_t<decltype(&A::add)>, A volatile>);
+
   return 0;
 }
 ```
 
-## xh::getter, xh::setter, xh::getset
-```C++
-#include "function.h"
+### xh::getter, xh::setter, xh::getset
 
-template<class Ret>
-class getter;
+The `getter` and `setter` utilities simplify the creation of class properties that perform custom actions when getting or setting a value. In a class, you can define members of `getter` and `setter` types, which overload the type conversion and assignment operators, respectively. When accessing a `getter` member, a custom getter function is called to obtain the return value, while assigning to a `setter` member triggers a custom setter function to modify the value. The `getter` and `setter` types are constructed by passing a callable object, while the `getset` type is constructed by passing two callable objects.
 
-template<class Arg>
-class setter;
-
-template<class Ret, class Arg>
-class getset;
-```
-在类中可以定义getter和setter类型的成员。分别重载了类型转换与赋值运算符。在获取getter类型成员时，会调用自定义getter函数，获取到返回值；在赋值setter类型成员时，会调用自定义setter函数，对一些值进行修改。其中getter和setter传入一个可调用对象构造，getset传入两个可调用对象构造。 
- 
-示例代码： 
 ```C++
 #include <cassert>
 #include "function.h"
 
-struct A {
-  int a;
-  const xh::getter<int> getA = [this] { return a; };
-  const xh::setter<int> setA = [this](int val) { a = val; };
-  const xh::getset<int, int> getsetA = {
-    [this] { return a; },
-    [this](int val) { a = val; }
+class A {
+ public:
+  int num;
+  static const int k = 2;
+  A(int n) : num(n) {}
+
+  const xh::getter<int> getNumMoreThanK = [&]() { return num + k; };
+  const xh::setter<int> setNumMoreThanK = [&](int n) { num = n - k; };
+  const xh::getset<int, int> numMoreThanK = {
+    [&]() { return num + k; },
+    [&](int n) { num = n - k; }
   };
 };
 
 int main() {
-  A a;
-  a.setA = 1;
-  assert(a.getA == 1);
-  a.getsetA = 2;
-  assert(a.getsetA == 2);
+  A a = 10;
+  assert(a.getNumMoreThanK == 12);
+  a.setNumMoreThanK = 13;
+  assert(a.num == 11);
+  assert(a.numMoreThanK == 13);
+  a.numMoreThanK = 14;
+  assert(a.num == 12);
+
   return 0;
 }
 ```
 
-## xh::_proxy
+### xh::member_function
+
+The `member_function` template wraps member functions, making them easier to pass around and use as first-class objects. It achieves this by overloading the function call operator `()`, allowing member functions to be invoked with a pointer or reference to an object of the class as the first argument. The wrapper adapts to different cv-qualifiers and reference qualifiers of the member function, ensuring appropriate handling of the first argument based on these qualifiers.
+
 ```C++
+#include <cassert>
 #include "function.h"
 
-template<class T>
-class _proxy;
-```
-成员函数包装类，重载了括号运算符，支持第一个参数传入类的对象的指针或引用，进行调用成员函数。根据成员函数的cv限定和引用限定，对第一个参数的传入做了不同的适配。 
- 
-示例代码：
-```C++
-#include "function.h"
+class A {
+ public:
+  int num;
+  A(int n) : num(n) {}
 
-struct A {
-  void fun1(int) {}
-  void fun2(int, int) && {}
+  int add(int n) volatile {
+    num += n;
+    return num;
+  }
 }
 
 int main() {
-  xh::_proxy f1 = &A::fun1;
-  xh::_proxy f2 = &A::fun2;
-  A a;
-  f1(&a, 1);
-  f2(A(), 1, 2);
+  A a(12);
+  xh::member_function mf = &A::add;
+  assert(mf(a, 2) == 14);
+  mf(&a, 2);
+  assert(a.num == 16);
+
   return 0;
 }
 ```
 
-## xh::multi_function
+### MEMBER_FUNCTION_PROXY
+
+`MEMBER_FUNCTION_PROXY` allows you to create a proxy function for a class member function. This proxy can intercept calls and modify behavior.
+
 ```C++
+#include <cassert>
 #include "function.h"
 
-template<class... T>
-class multi_function;
-```
-类似函数重载，需在编译期传入若干个可调用对象。重载了括号运算符，支持对所传入的函数进行对应地调用。 
- 
-示例代码：
-```C++
-#include <string>
-#include "function.h"
-
-void fun1(int) {}
+class A {
+ public:
+  int num;
+}
 
 int main() {
-	auto fun2 = [](int x, int y) { return x + y; };
-	auto fun3 = [](std::string s) { return s + "1"; };
+  int (A::*ptr)(int);
+  MEMBER_FUNCTION_PROXY(ptr, (int n), {
+    proxy->num += n;
+    return proxy->num;
+  });
+  a.num = 10;
+  assert((a.*ptr)(2) == 12);
 
-	multi_function fun(fun1, fun2, fun3);
-  fun(1);
-  fun(1, 2);
-  fun("a");
   return 0;
 }
 ```
 
-## xh::function_chain
+### xh::multi_function
+
+The `multi_function` template allows the creation of a function object that can behave like an overloaded function, handling multiple types of arguments. It lets you pass multiple callable objects at compile-time and overloads the function call operator `()`, enabling the appropriate callable to be invoked based on the provided arguments.
+ 
 ```C++
+#include <cassert>
 #include "function.h"
 
-template<class T>
-class function_chain;
+int reload_fun(int) { return 0; }
+char reload_fun(char) { return 'a'; }
+
+int main() {
+  xh::multi_function multi_fun = {
+      [](int) { return 0; },
+      [](char) { return 'a'; }
+  };
+  assert(multi_fun(1) == reload_fun(1));
+  assert(multi_fun('a') == reload_fun('a'));
+  assert(multi_fun((short)'a') == reload_fun((short)'a'));
+
+  return 0;
+}
 ```
-函数调用链，支持上一个函数的返回值作为下一个函数的参数，链式调用函数。 
+
+### xh::function_chain
+
+`function_chain` allows you to chain multiple functions together, passing the result of one as the input to the next.
  
-示例代码：
 ```C++
-#include <iostream>
+#include <cassert>
 #include "function.h"
 
 int main() {
-	function_chain([](int a, int b) { return a + b; })
-		.then([](int a) { return a * 2; })
-		.then([](int a) { cout << a << endl; })
-			(1, 2);
+  xh::function_chain([](int a, int b) { return a + b; })
+      .then([](int a) { return a * 2; })
+      .then([](int res) { assert(res == (1 + 2) * 2); })
+          (1, 2);
+
 	return 0;
 }
 ```
 
-## xh::predicate
+### xh::function_pipe
 
-Something like C++20 pipe operator. Through our *predicate*, you can convert any function-like things into "pipe-operatable".
-
-U can also take this as "dynamic add (public) method to a class". Just can't visit private or protected things.
+The `function_pipe` allows functions to be called using a syntax similar to a pipe operator. It supports chaining function calls in a manner similar to `function_chain`, where the output of each function becomes the first argument of the next function in the pipeline.
 
 ```C++
-#include "predicate.h"
-#include <vector>
-#include <cstdio>
-void print_func(const std::vector<int> &vec){
-    for(auto &v:vec){
-        printf("%d\n", v);
-    }
-    printf("print1\n");
-}
+#include <cassert>
+#include "function.h"
+
 int main(){
-    std::vector<int> v{1,2,3};
-    int a=1;
-    auto print2 = PRED(
-        [&a](const std::vector<int> &vec){
-            for(auto &v:vec){
-                printf("%d,\n",v+a);
-            }
-            printf("print2\n");
-        });
-    auto print1 = PRED(print_func);
-    v|print1; 
-    /*
-        if there's no other arguments, 
-        we allow you not to type () 
-    */
-    v|print2();
+  xh::function_pipe pf1 = [](int a, int b) { return a + b; };
+  xh::function_pipe pf2 = [](int a) { return a * 2; };
+  xh::function_pipe pf3 = [](int res) { assert(res == (1 + 2) * 2); };
+  1 | pf1(2) | pf2 | pf3;
+
+  return 0;
 }
 ```
-
-## ADD_METHOD
-
-This is another way we tried to add method to class dynamically. 
-
-```C++
-#include "test_add_method.h"
-#include <iostream>
-struct Test{
-    int b;
-    Test(int b_=1):b(b_){}
-};
-int main(){
-    int (Test::* member_function_pointer)(int) const = nullptr;
-    ADD_METHOD(member_function_pointer, (int a) const {
-       const Test *self = (const Test*)this;
-       return a+self->b;
-    })
-    Test obj;
-    std::cout<<(obj.*member_function_pointer)(1);
-}
-```
-
-Still, we can't visit private and protected things.

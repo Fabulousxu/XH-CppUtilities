@@ -1,13 +1,13 @@
 // C++20 function.h
 // Author: xupeigong@sjtu.edu.cn, 1583913466@qq.com
-// Last Updated: 2024-08-19
+// Last Updated: 2024-08-20
 
 // This header file defines a series of utilities for function wrapping,
 // extending some of the capabilities not provided by the standard library. It
 // includes implementations for getter and setter properties of classes,
 // improved encapsulation of member functions, the addition of proxy functions
-// for member functions, support for overloading-like function wrappers, and
-// the implementation of chainable function calls.
+// for member functions, support for overloading-like function wrappers, the
+// implementation of chainable function calls and pipe-like called function.
 
 #ifndef _XH_FUNCTION_TOOLS_H_
 #define _XH_FUNCTION_TOOLS_H_
@@ -54,7 +54,7 @@ class getset {
  public:
   template<class T1, class T2>
   getset(T1 &&f1, T2 &&f2) noexcept
-      : _getter(forward<T1>(f1)), _setter(forward<T2>(f2)) {}
+    : _getter(forward<T1>(f1)), _setter(forward<T2>(f2)) {}
   operator R() const { return _getter(); }
   void operator=(Arg arg) const { _setter(arg); }
 };
@@ -200,6 +200,32 @@ class function_chain<R(Args...)> {
 
 template<typename T>
 function_chain(T) -> function_chain<function_traits_t<T>>;
+
+
+/*****************
+ * pipe function *
+ *****************/
+
+template<class>
+class function_pipe;
+
+template<class R, class Arg0, class... Args>
+class function_pipe<R(Arg0, Args...)> {
+  function<R(Arg0, Args...)> _func;
+  tuple<Args...> _args;
+ public:
+  template<class T>
+  function_pipe(T &&f) : _func(forward<T>(f)) {}
+  function_pipe<R(Arg0, Args...)> &operator()(Args... args) {
+    _args = {args...};
+    return *this;
+  }
+  friend R operator|(Arg0 arg0, const function_pipe<R(Arg0, Args...)> &pf)
+  { return apply(pf._func, tuple_cat(tuple(arg0), pf._args)); }
+};
+
+template<class T>
+function_pipe(T) -> function_pipe<function_traits_t<T>>;
 
 }; // namespace xh
 
