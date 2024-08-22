@@ -7,6 +7,5 @@ add_executable(XH-CppTools main.cpp
         function.h
         function_traits.h
         cpp_tools.h
-        view.h
         tutorial.cpp
 )

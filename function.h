@@ -189,11 +189,14 @@ class function_chain<R(Args...)> {
  public:
   template<typename T>
   function_chain(T &&f) noexcept: _function_chain(forward<T>(f)) {}
-  R operator()(Args &&...args) const { return _function_chain(forward<Args>(args)...); }
+  R operator()(Args... args) const { return _function_chain(args...); }
   template<typename T>
-  function_chain<function_return_t<T>(Args...)> then(T &&f) {
-    return {[g = forward<T>(f), this](Args &&...args) {
-      return g(_function_chain(forward<Args>(args)...));
+  function_chain<function_return_t<T>(Args...)> then(T &&f) const {
+    return {[f, this](Args... args) {
+      if constexpr (is_void_v<R>) {
+        _function_chain(args...);
+        return f();
+      } else return f(_function_chain(args...));
     }};
   }
 };
