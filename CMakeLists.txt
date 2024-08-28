@@ -4,8 +4,9 @@ project(XH-CppTools)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(XH-CppTools main.cpp
-        function.h
+        function_tools.h
         function_traits.h
         cpp_tools.h
         tutorial.cpp
+        concurrent.h
 )
