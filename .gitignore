@@ -5,7 +5,10 @@ x86/
 x64/
 out/
 cmake-build-debug/
+cmake-build-debug-mingw/
+cmake-build-debug-visual-studio/
 build/
+CMakeSettings.json
 
 # Prerequisites
 *.d
