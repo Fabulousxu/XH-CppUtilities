@@ -1,7 +1,7 @@
 // XH-CppUtilities
 // C++20 function_traits.h
 // Author: xupeigong@sjtu.edu.cn
-// Last Updated: 2024-09-03
+// Last Updated: 2024-09-05
 
 #ifndef _XH_FUNCTION_TRAITS_H_
 #define _XH_FUNCTION_TRAITS_H_
