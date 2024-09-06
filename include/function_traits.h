@@ -27,10 +27,6 @@ template <class T>
 struct is_functor<T, std::void_t<decltype(&T::operator())>> : std::true_type {};
 
 template <class T>
-struct is_callable : std::conjunction<is_functor<std::decay_t<T>>,
-  is_function<std::remove_pointer_t<std::decay_t<T>>>> {};
-
-template <class T>
 struct is_memfunc : std::is_member_function_pointer<T> {};
 
 template <class T>
@@ -41,9 +37,6 @@ inline constexpr bool is_funcptr_v = is_funcptr<T>::value;
 
 template <class T>
 inline constexpr bool is_functor_v = is_functor<T>::value;
-
-template <class T>
-inline constexpr bool is_callable_v = is_callable<T>::value;
 
 template <class T>
 inline constexpr bool is_memfunc_v = std::is_member_function_pointer_v<T>;
@@ -92,29 +85,15 @@ struct _memfunc_traits<T C::*> : _function_traits<T> {
   using function_type = T;
 };
 
-template <class T,
-  bool IsFunction = is_function_v<T>, bool IsFuncptr = is_funcptr_v<T>,
-  bool IsFunctor  = is_functor_v<T>,  bool IsMemfunc = is_memfunc_v<T>>
-struct _function_traits_helper : _function_traits_helper<std::decay_t<T>> {};
+template <class T>
+struct _function_traits_helper
+  : std::conditional_t<is_function_v<T>, _function_traits<T>,
+      std::conditional_t<is_funcptr_v<T>, _funcptr_traits<T>,
+        std::conditional_t<is_functor_v<T>, _functor_traits<T>,
+          std::conditional_t<is_memfunc_v<T>, _memfunc_traits<T>, void>>>> {};
 
 template <class T>
-struct _function_traits_helper<T, true, false, false, false>
-  : _function_traits<T> {};
-
-template <class T>
-struct _function_traits_helper<T, false, true, false, false>
-  : _funcptr_traits<T> {};
-
-template <class T>
-struct _function_traits_helper<T, false, false, true, false>
-  : _functor_traits<T> {};
-
-template <class T>
-struct _function_traits_helper<T, false, false, false, true>
-  : _memfunc_traits<T> {};
-
-template <class T>
-using function_traits = _function_traits_helper<T>;
+using function_traits = _function_traits_helper<std::decay_t<T>>;
 
 template <class T>
 using function_traits_t = function_traits<T>::type;

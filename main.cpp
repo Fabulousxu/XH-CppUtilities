@@ -5,6 +5,7 @@
 #include <queue>
 #include <set>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #include "function_traits.h"
@@ -19,9 +20,6 @@ struct A {
 };
 
 int main() {
-  auto f = std::mem_fn(&A::fun);
-  A a;
-  cout << f(&a, 1);
 
   return 0;
 }
