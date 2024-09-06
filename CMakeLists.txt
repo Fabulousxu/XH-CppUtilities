@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-add_executable(${PROJECT_NAME} tutorial.cpp main.cpp)
+add_executable(${PROJECT_NAME}  main.cpp )
