@@ -1,5 +1,6 @@
 #include <cassert>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <queue>
 #include <set>
@@ -8,18 +9,19 @@
 
 #include "function_traits.h"
 #include "function_utility.h"
-#include "qualifier_traits.h"
+#include "qualifier.h"
 
 using namespace xh;
 using namespace std;
 
-int main() { 
-  auto f1 = [](int a, int b) { return a + b; };
-  auto f2 = [](int a, int b) { return a + b; };
-  auto f3 = [](int a) { return a * 2; };
-  auto f4 = [](int a) { cout << a; };
+struct A {
+  int fun(int) { return 0; }
+};
 
-funcchain(f1).then(f3).then(f4)(1, 2);
+int main() {
+  auto f = std::mem_fn(&A::fun);
+  A a;
+  cout << f(&a, 1);
 
   return 0;
 }

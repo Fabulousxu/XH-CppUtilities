@@ -156,6 +156,6 @@ funcchain(T) -> funcchain<function_traits_t<T>>;
 template <class T>
 funcpipe(T) -> funcpipe<function_traits_t<T>>;
 
-};  // namespace xh
+}  // namespace xh
 
-#endif  //_XH_FUNCTION_UTILITY_H_
+#endif  // !_XH_FUNCTION_UTILITY_H_

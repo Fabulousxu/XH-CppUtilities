@@ -9,7 +9,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include "qualifier_traits.h"
+#include "qualifier.h"
 
 namespace xh {
 

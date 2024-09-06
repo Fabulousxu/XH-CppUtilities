@@ -1,5 +1,5 @@
 // XH-CppUtilities
-// C++20 qualifier_traits.h
+// C++20 qualifier.h
 // Author: xupeigong@sjtu.edu.cn
 // Last Updated: 2024-09-06
 
