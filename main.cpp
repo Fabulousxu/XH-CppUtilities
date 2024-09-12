@@ -1,3 +1,4 @@
+#include <any>
 #include <cassert>
 #include <fstream>
 #include <functional>
@@ -15,11 +16,11 @@
 using namespace xh;
 using namespace std;
 
-struct A {
-  int fun(int) { return 0; }
-};
-
 int main() {
+  xh::multifunc f = {[](int) { return 0; }, [](char) { return 1; }};
+
+  cout << f(1) << endl;
+  cout << f('a') << endl;
 
   return 0;
 }
