@@ -87,6 +87,7 @@ class function<Ret(Args...)> {
   struct funcbase {
     virtual Ret call(Args...) const = 0;
     virtual funcbase *copy() const noexcept = 0;
+    virtual ~funcbase() noexcept = default;
   } *fbp = nullptr;
 
   template <class T> requires (is_funcptr_v<T> || is_functor_v<T>)
@@ -97,6 +98,7 @@ class function<Ret(Args...)> {
 
     Ret call(Args... args) const override { return f(forward<Args>(args)...); }
     funcimpl *copy() const noexcept override { return new funcimpl(f); }
+    ~funcimpl() noexcept override = default;
   };
 };
 
@@ -134,6 +136,20 @@ class multifunc {
     return *this;
   }
 
+ private:
+  template <size_t N, bool Strict, class... Args>
+  static constexpr bool match() {
+    if constexpr (Strict)
+      if constexpr (N == sizeof...(T)) return match<0, false, Args...>();
+      else if constexpr (is_same_v<tuple<Args...>, funcarg_tuple<fn_t<N>>>)
+        return true;
+      else return match<N + 1, true, Args...>();
+    else if (N >= sizeof...(T)) return false;
+    else if constexpr (is_invocable_v<fn_t<N>, Args...>) return true;
+    else return match<N + 1, false, Args...>();
+  }
+
+ public:
   template <class... Args>
   static constexpr bool is_match_v = match<0, true, Args...>();
 
@@ -147,18 +163,6 @@ class multifunc {
 
   template <size_t N>
   using fn_t = nth_of_t<N, T...>;
-
-  template <size_t N, bool Strict, class... Args>
-  static constexpr bool match() {
-    if constexpr (Strict)
-      if constexpr (N == sizeof...(T)) return match<0, false, Args...>();
-      else if constexpr (is_same_v<tuple<Args...>, funcarg_tuple<fn_t<N>>>)
-        return true;
-      else return match<N + 1, true, Args...>();
-    else if (N >= sizeof...(T)) return false;
-    else if constexpr (is_invocable_v<fn_t<N>, Args...>) return true;
-    else return match<N + 1, false, Args...>();
-  }
 
   template <size_t N, bool Strict, class... Args>
   decltype(auto) call(Args &&...args) const {
