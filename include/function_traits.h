@@ -40,6 +40,14 @@ inline constexpr bool is_functor_v = is_functor<T>::value;
 template <class T>
 inline constexpr bool is_memfunc_v = is_memfunc<T>::value;
 
+// nth_of
+
+template <size_t N, class... T>
+struct nth_of : tuple_element<N, tuple<T...>> {};
+
+template <size_t N, class... T>
+using nth_of_t = nth_of<N, T...>::type;
+
 // function traits
 
 template <class T>
@@ -63,7 +71,7 @@ struct _function_traits<Ret(Args...)> {
   using return_type = Ret;
   using   arg_tuple = tuple<Args...>;
   template <size_t N>
-  using    arg_type = tuple_element_t<N, arg_tuple>;
+  using    arg_type = nth_of_t<N, Args...>;
   inline static constexpr size_t arity = sizeof...(Args);
 };
 
@@ -73,7 +81,7 @@ struct _function_traits<Ret(Args..., ...)> {
   using return_type = Ret;
   using   arg_tuple = tuple<Args...>;
   template <size_t N>
-  using    arg_type = tuple_element_t<N, arg_tuple>;
+  using    arg_type = nth_of_t<N, Args...>;
   inline static constexpr size_t arity = sizeof...(Args);
 };
 

@@ -16,11 +16,18 @@
 using namespace xh;
 using namespace std;
 
+int fun(int) { return 0; }
+char cfun(int) { return 'a'; }
+
 int main() {
   xh::multifunc f = {[](int) { return 0; }, [](char) { return 1; }};
 
   cout << f(1) << endl;
   cout << f('a') << endl;
+
+  std::function fff = fun;
+  fff = cfun;
+  cout << fff(1);
 
   return 0;
 }

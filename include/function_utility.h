@@ -108,17 +108,34 @@ function(T) -> function<functraits_t<T>>;
 template <class... T>
 struct multifunctor : T... {
   using T::operator()...;
-  multifunctor(T... f) noexcept : T(forward<T>(f))... {}
+  constexpr multifunctor(T... f) noexcept : T(forward<T>(f))... {}
 };
 
 template <class... T>
 class multifunc {
  public:
-  multifunc(T... f) noexcept : ftuple(f...) {}
+  template <class... F>
+    requires (sizeof...(F) > 1 || (sizeof...(F) == 1 &&
+      !is_same_v<decay_t<nth_of_t<0, F...>>, multifunc>))
+  multifunc(F &&...f) noexcept : ftuple(forward<F>(f)...) {}
+  
   multifunc() noexcept = default;
+  multifunc(const multifunc &) noexcept = default;
+  multifunc(multifunc &&) noexcept = default;
+  ~multifunc() noexcept = default;
+  multifunc &operator=(const multifunc &) noexcept = default;
+  multifunc &operator=(multifunc &&) noexcept = default;
+
+  template <class... F>
+    requires (sizeof...(F) > 1 || (sizeof...(F) == 1 &&
+      !is_same_v<decay_t<nth_of_t<0, F...>>, multifunc>))
+  multifunc &operator=(F &&...f) {
+    ftuple = {forward<F>(f)...};
+    return *this;
+  }
 
   template <class... Args>
-  static constexpr bool is_match_v = is_match<0, true, Args...>();
+  static constexpr bool is_match_v = match<0, true, Args...>();
 
   template <class... Args> requires is_match_v<Args...>
   decltype(auto) operator()(Args &&...args) const {
@@ -126,31 +143,29 @@ class multifunc {
   }
 
  private:
-  tuple<T...> ftuple;
+  tuple<std::function<T>...> ftuple;
+
+  template <size_t N>
+  using fn_t = nth_of_t<N, T...>;
 
   template <size_t N, bool Strict, class... Args>
-  static constexpr bool is_match() {
+  static constexpr bool match() {
     if constexpr (Strict)
-      if constexpr (N == sizeof...(T))
-        return is_match<0, false, Args...>();
-      else if constexpr (is_same_v<tuple<Args...>,
-        funcarg_tuple<tuple_element_t<N, tuple<T...>>>>) return true;
-      else return is_match<N + 1, true, Args...>();
-    else {
-      if (N == sizeof...(T)) return false;
-      if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
+      if constexpr (N == sizeof...(T)) return match<0, false, Args...>();
+      else if constexpr (is_same_v<tuple<Args...>, funcarg_tuple<fn_t<N>>>)
         return true;
-      else return is_match<N + 1, false, Args...>();
-    }
+      else return match<N + 1, true, Args...>();
+    else if (N >= sizeof...(T)) return false;
+    else if constexpr (is_invocable_v<fn_t<N>, Args...>) return true;
+    else return match<N + 1, false, Args...>();
   }
 
   template <size_t N, bool Strict, class... Args>
   decltype(auto) call(Args &&...args) const {
     if constexpr (Strict)
-      if constexpr (N == sizeof...(T))
+      if constexpr (N >= sizeof...(T))
         return call<0, false>(forward<Args>(args)...);
-      else if constexpr (is_same_v<tuple<Args...>,
-        funcarg_tuple<tuple_element_t<N, tuple<T...>>>>)
+      else if constexpr (is_same_v<tuple<Args...>, funcarg_tuple<fn_t<N>>>)
         return get<N>(ftuple)(forward<Args>(args)...);
       else return call<N + 1, true>(forward<Args>(args)...);
     else {
@@ -162,8 +177,8 @@ class multifunc {
   }
 };
 
-//template <class... T>
-//multifunc(T...) -> multifunc<functraits_t<T>...>;
+template <class... T>
+multifunc(T...) -> multifunc<functraits_t<T>...>;
 
 // function chain and pipe
 
