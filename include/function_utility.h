@@ -170,7 +170,7 @@ class multifunc {
       else return call<N + 1, true>(forward<Args>(args)...);
     else {
       static_assert(N < sizeof...(T), "No matching function for call");
-      if constexpr (is_invocable_v<tuple_element_t<N, tuple<T...>>, Args...>)
+      if constexpr (is_invocable_v<fn_t<N>, Args...>)
         return get<N>(ftuple)(forward<Args>(args)...);
       else return call<N + 1, false>(forward<Args>(args)...);
     }

@@ -25,9 +25,5 @@ int main() {
   cout << f(1) << endl;
   cout << f('a') << endl;
 
-  std::function fff = fun;
-  fff = cfun;
-  cout << fff(1);
-
   return 0;
 }
